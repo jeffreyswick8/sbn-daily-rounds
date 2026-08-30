@@ -183,7 +183,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .issue-note:focus{border-color:var(--red)}
 .issue-note::placeholder{color:var(--muted)}
 .photo-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-.photo-btn{padding:8px 12px;background:var(--card);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.photo-btn{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;padding:8px 12px;background:var(--card);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
 .photo-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;position:relative}
 .photo-thumb-wrap{position:relative;display:inline-block}
 .photo-remove{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
@@ -574,8 +574,8 @@ function renderWalkthrough(){
         var photoKey=currentSection+'-'+idx;
         var photos=photoStore[photoKey]||[];
         if(photos.length<3){
-          html+='<button class="photo-btn" onclick="triggerPhoto('+currentSection+','+idx+')">📷 Photo</button>';
-          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" style="display:none" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
+          html+='<label class="photo-btn" for="fileInput-'+currentSection+'-'+idx+'">📷 Photo</label>';
+          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="camera" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
         }
         photos.forEach(function(p,pi){
           html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+p+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">✕</button></div>';
