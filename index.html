@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff9900">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>SBN Daily Rounds</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#1a2332;--surface:#232f3e;--card:#2d3a4a;--accent:#ff9900;--accent-dark:#cc7a00;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#94a3b8;--border:#374151;--radius:12px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;overflow:hidden;touch-action:pan-y}
+.app{display:flex;flex-direction:column;height:100%;max-width:768px;margin:0 auto}
+
+/* Header */
+.header{background:var(--surface);padding:12px 16px;border-bottom:2px solid var(--accent);text-align:center;flex-shrink:0}
+.header h1{font-size:18px;color:var(--accent);font-weight:700}
+.header .sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Screens */
+.screen{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex;flex-direction:column}
+
+/* Screen: Start */
+.start-screen{padding:16px}
+.warning-banner{background:var(--red);color:#fff;padding:10px;border-radius:var(--radius);font-size:12px;font-weight:600;text-align:center;margin-bottom:16px}
+.start-label{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600;margin:12px 0 6px;letter-spacing:0.5px}
+.building-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.building-btn{padding:14px 8px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s}
+.building-btn.selected{background:var(--accent);color:#000;border-color:var(--accent)}
+.shift-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shift-btn{padding:14px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s}
+.shift-btn.selected{background:var(--accent);color:#000;border-color:var(--accent)}
+.start-input{width:100%;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:15px;outline:none}
+.start-input:focus{border-color:var(--accent)}
+.start-input::placeholder{color:var(--muted)}
+.begin-btn{width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:17px;font-weight:700;cursor:pointer;margin-top:20px;transition:opacity 0.15s}
+.begin-btn:disabled{opacity:0.4;cursor:not-allowed}
+.begin-btn:active{opacity:0.8}
+
+/* Active rounds */
+.active-rounds{margin-top:16px;padding:12px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+.active-rounds h3{font-size:13px;color:var(--accent);margin-bottom:8px}
+.active-round-item{font-size:12px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border)}
+.active-round-item:last-child{border:none}
+
+/* Screen: Walkthrough */
+.walk-header{background:var(--surface);padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.walk-progress{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.walk-progress-bar{flex:1;height:6px;background:var(--card);border-radius:3px;overflow:hidden}
+.walk-progress-fill{height:100%;background:var(--accent);transition:width 0.3s ease;border-radius:3px}
+.walk-progress-text{font-size:11px;color:var(--muted);white-space:nowrap}
+.walk-section-name{font-size:18px;font-weight:700;color:var(--text)}
+.walk-section-desc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4}
+
+.walk-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px}
+
+/* All OK button */
+.all-ok-btn{width:100%;padding:16px;background:rgba(34,197,94,0.15);border:2px solid var(--green);border-radius:var(--radius);color:var(--green);font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s}
+.all-ok-btn:active{background:var(--green);color:#000}
+
+/* Swipe cards */
+.swipe-card-wrap{position:relative;margin-bottom:8px;overflow:hidden;border-radius:var(--radius)}
+.swipe-bg{position:absolute;top:0;bottom:0;display:flex;align-items:center;font-size:14px;font-weight:700;padding:0 20px;z-index:0}
+.swipe-bg-ok{left:0;right:50%;background:var(--green);color:#fff;justify-content:flex-start}
+.swipe-bg-issue{right:0;left:50%;background:var(--red);color:#fff;justify-content:flex-end}
+.swipe-card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:1;transition:transform 0.1s ease;cursor:pointer;min-height:52px;touch-action:pan-y}
+.swipe-card.swiping{transition:none}
+.swipe-card.snap-back{transition:transform 0.25s ease}
+.swipe-card .item-name{font-size:15px;font-weight:500}
+.swipe-card .item-status{font-size:13px;font-weight:700;min-width:28px;text-align:center}
+.swipe-card .item-status.ok{color:var(--green)}
+.swipe-card .item-status.issue{color:var(--red)}
+
+/* Issue detail */
+.issue-detail{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:0 0 var(--radius) var(--radius);padding:12px;margin-top:-8px;margin-bottom:8px;animation:slideDown 0.2s ease}
+@keyframes slideDown{from{opacity:0;max-height:0}to{opacity:1;max-height:300px}}
+.issue-note{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;resize:none;min-height:44px;font-family:inherit}
+.issue-note:focus{border-color:var(--red)}
+.issue-note::placeholder{color:var(--muted)}
+.photo-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.photo-btn{padding:8px 12px;background:var(--card);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.photo-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;position:relative}
+.photo-thumb-wrap{position:relative;display:inline-block}
+.photo-remove{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* Section notes */
+.section-notes{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.section-notes label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.section-notes textarea{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;resize:none;min-height:44px;margin-top:4px;font-family:inherit}
+
+/* Walk nav */
+.walk-nav{display:flex;gap:8px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.walk-nav button{flex:1;padding:14px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none}
+.walk-nav .nav-prev{background:var(--card);color:var(--text)}
+.walk-nav .nav-next{background:var(--accent);color:#000}
+.walk-nav button:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Progress dots */
+.progress-dots{display:flex;gap:4px;justify-content:center;padding:8px 16px;flex-wrap:wrap}
+.progress-dot{width:10px;height:10px;border-radius:50%;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all 0.15s}
+.progress-dot.current{background:var(--accent);border-color:var(--accent);transform:scale(1.3)}
+.progress-dot.done{background:var(--green);border-color:var(--green)}
+.progress-dot.has-issue{background:var(--red);border-color:var(--red)}
+
+/* Screen: Summary */
+.summary-screen{padding:16px}
+.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.summary-stat{background:var(--card);border-radius:var(--radius);padding:12px;text-align:center}
+.summary-stat .num{font-size:24px;font-weight:700}
+.summary-stat .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.summary-stat.green .num{color:var(--green)}
+.summary-stat.red .num{color:var(--red)}
+.summary-stat.orange .num{color:var(--accent)}
+.summary-section{background:var(--card);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;border:1px solid var(--border)}
+.summary-section-header{padding:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.summary-section-header .name{font-size:14px;font-weight:600}
+.summary-section-header .badge{font-size:12px;font-weight:700;padding:2px 8px;border-radius:8px}
+.summary-section-header .badge.ok{background:rgba(34,197,94,0.15);color:var(--green)}
+.summary-section-header .badge.issue{background:rgba(239,68,68,0.15);color:var(--red)}
+.summary-section-detail{padding:0 12px 12px;font-size:13px;color:var(--muted);display:none}
+.summary-section-detail.open{display:block}
+.summary-section-detail .issue-item{padding:6px 0;border-bottom:1px solid var(--border)}
+.summary-section-detail .issue-item:last-child{border:none}
+.summary-section-detail .issue-name{color:var(--red);font-weight:600}
+.summary-section-detail .issue-note{color:var(--muted);font-style:italic;margin-top:2px}
+.summary-section-detail .completed-info{font-size:11px;color:var(--muted);margin-top:4px}
+.submit-btn{width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px}
+.submit-btn:active{opacity:0.8}
+
+/* Photo preview modal */
+.photo-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+.photo-modal.active{display:flex}
+.photo-modal img{max-width:90%;max-height:75vh;border-radius:8px}
+.photo-modal-close{margin-top:16px;padding:12px 24px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:300;display:none;max-width:90%;text-align:center;box-shadow:0 4px 12px rgba(255,153,0,0.3)}
+.toast.show{display:block;animation:fadeInDown 0.3s ease}
+@keyframes fadeInDown{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* Utilities */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+<h1>SBN Daily Rounds</h1>
+<div class="sub" id="headerSub">Select building to begin</div>
+</div>
+
+<!-- START SCREEN -->
+<div class="screen active" id="startScreen">
+<div class="start-screen">
+<div class="warning-banner">⚠️ ENSURE ALL DOORS IN PFHO'D SPACES ARE CLOSED/LOCKED — DOORS CAN NOT BE KEPT PROPPED OPEN ⚠️</div>
+
+<div class="start-label">Building</div>
+<div class="building-grid" id="buildingGrid"></div>
+
+<div class="start-label">Technician</div>
+<input type="text" class="start-input" id="techName" placeholder="Your name">
+
+<div class="start-label">Shift</div>
+<div class="shift-grid">
+<button class="shift-btn" onclick="selectShift('Days',this)">☀️ Days</button>
+<button class="shift-btn" onclick="selectShift('Nights',this)">🌙 Nights</button>
+</div>
+
+<div class="start-label">Daily Ticket URL</div>
+<input type="text" class="start-input" id="ticketUrl" placeholder="Ticket # or URL">
+
+<button class="begin-btn" id="beginBtn" onclick="beginRounds()" disabled>BEGIN ROUNDS</button>
+
+<div class="active-rounds" id="activeRounds" style="display:none">
+<h3>🔄 Active Rounds</h3>
+<div id="activeRoundsList"></div>
+</div>
+</div>
+</div>
+
+<!-- WALKTHROUGH SCREEN -->
+<div class="screen" id="walkScreen">
+<div class="walk-header">
+<div class="walk-progress">
+<div class="walk-progress-bar"><div class="walk-progress-fill" id="walkProgressFill"></div></div>
+<div class="walk-progress-text" id="walkProgressText">0 / 0</div>
+</div>
+<div class="walk-section-name" id="walkSectionName"></div>
+<div class="walk-section-desc" id="walkSectionDesc"></div>
+</div>
+<div class="progress-dots" id="progressDots"></div>
+<div class="walk-content" id="walkContent"></div>
+<div class="walk-nav">
+<button class="nav-prev" onclick="prevSection()">← Previous</button>
+<button class="nav-next" id="nextBtn" onclick="nextSection()">Next Section →</button>
+</div>
+</div>
+
+<!-- SUMMARY SCREEN -->
+<div class="screen" id="summaryScreen">
+<div class="summary-screen">
+<div class="summary-stats" id="summaryStats"></div>
+<div id="summarySections"></div>
+<button class="submit-btn" onclick="submitRounds()">📤 SUBMIT ROUNDS</button>
+</div>
+</div>
+</div>
+
+<!-- Photo preview modal -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+<img id="photoModalImg" src="">
+<button class="photo-modal-close" onclick="closePhotoModal()">Close</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== SECTIONS DATA ===== */
+var sections = [
+  {name:'Office Area', desc:'Check that systems are free of unexpected alarms',
+   cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel'],
+   type:'ok_issue'},
+  {name:'Medium Voltage Switchgear A and B', desc:'Check that all breakers are in normal alignment, FLoReS is in AUTO, relay status is good, and free of alarms. Check Controls UPS Voltage (110 Vdc - 140 Vdc)',
+   cols:['Breaker Status','FLoReS','UPS','Audible/Visual'],
+   type:'ok_issue'},
+  {name:'Generator Yard DH1', desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater are working properly. Check breaker status. Check for leakages and debris. Verify XFMR winding temp, liquid temp, liquid level, and pressure are all in normal range.',
+   cols:['HSSB GEN','HSSB XFMR','GEN 1.3B','XFMR 1.3B','GEN 1.1C','XMFR 1.1C','GEN 1.3A','XFMR 1.3A','GEN 1.1B','XMFR 1.1B','GEN 1.4B','XFMR 1.4B','GEN 1.1A','XMFR 1.1A','GEN 1.4A','XFMR 1.4A','GEN 1.2B','XMFR 1.2B','GEN 1.5B','XFMR 1.5B','GEN 1.2A','XMFR 1.2A','GEN 1.5A','XFMR 1.5A','GEN 1.6B','XFMR 1.6B','GEN 1.6A','XFMR 1.6A'],
+   type:'exp_unexp'},
+  {name:'Diesel Fuel System', desc:'Check for leaks in the fuel piping, tank, and pumps. Ensure pumps are in auto and free of alarms. Verify fuel level is above 80%',
+   cols:['Piping','Tank','Pumps','Audible/Visual'],
+   type:'exp_unexp'},
+  {name:'Generator Yard DH2', desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater are working properly. Check breaker status. XFMR winding temp, liquid temp, liquid level, and pressure are all in normal range.',
+   cols:['GEN 2.1C','XMFR 2.1C','GEN 2.3B','XFMR 2.3B','GEN 2.1B','XMFR 2.1B','GEN 2.3A','XFMR 2.3A','GEN 2.1A','XMFR 2.1A','GEN 2.4B','XFMR 2.4B','GEN 2.2B','XMFR 2.2B','GEN 2.4A','XFMR 2.4A','GEN 2.2A','XMFR 2.2A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A'],
+   type:'exp_unexp'},
+  {name:'Electrical Room 1.1-1.6', desc:'Check that equipment is in normal alignment, in AUTO, and free of unexpected alarms. Check every USB, ATS, COP, CUPS/HUPS, DLB, AMCOP, BACOP, VESDA, and ACS/MaxCool panel. Investigate all alarms and note any discrepancies.',
+   cols:['HSSB','Lineup 1.1A','Lineup 1.3B','Lineup 1.4A','Lineup 1.1C','Lineup 1.2B','Lineup 1.3A','Lineup 1.5B','Lineup 1.1B','Lineup 1.2A','Lineup 1.4B','Lineup 1.5A','Lineup 1.6B','Lineup 1.6A'],
+   type:'ok_issue'},
+  {name:'DAHU Gallery 1 (Odds)', desc:'All DAHUs in auto with no unexpected alarms, DAHU is NOT leaking water. All VFDs in auto. VESDA not in alarm.',
+   cols:['1.6-007','1.5-005','1.4-003','1.3-001','1.6-005','1.5-003','1.4-001','1.2-007','1.6-003','1.5-001','1.3-007','1.2-005','1.6-001','1.4-007','1.3-005','1.2-003','1.5-007','1.4-005','1.3-003','1.2-001','1.1-009','1.1-007','1.1-005','1.1-003','1.1-001'],
+   type:'ok_issue'},
+  {name:'Electrical Room 2.1-2.6', desc:'Check that equipment is in normal alignment, in AUTO, and free of unexpected alarms. Check every USB, ATS, COP, CUPS, AMCOP, BACOP, VESDA, and ACS/MaxCool panel. Investigate all alarms and note any discrepancies.',
+   cols:['Lineup 2.1C','Lineup 2.2B','Lineup 2.3A','Lineup 2.5B','Lineup 2.1B','Lineup 2.2A','Lineup 2.4B','Lineup 2.5A','Lineup 2.1A','Lineup 2.3B','Lineup 2.4A','Lineup 2.6B','Lineup 2.6A'],
+   type:'ok_issue'},
+  {name:'DAHU Gallery 2 (Odds)', desc:'All DAHUs in auto with no unexpected alarms, DAHU is NOT leaking water. All VFDs in auto. VESDA not in alarm.',
+   cols:['2.6-007','2.5-005','2.4-003','2.3-001','2.6-005','2.5-003','2.4-001','2.2-007','2.6-003','2.5-001','2.3-007','2.2-005','2.6-001','2.4-007','2.3-005','2.2-003','2.5-007','2.4-005','2.3-003','2.2-001','2.1-009','2.1-007','2.1-005','2.1-003','2.1-001'],
+   type:'ok_issue'},
+  {name:'DAHU Gallery 1 (Evens)', desc:'All DAHUs in auto with no unexpected alarms, DAHU is NOT leaking water. VESDA not in alarm.',
+   cols:['1.1-002','1.2-002','1.3-004','1.4-006','1.1-004','1.2-004','1.3-006','1.4-008','1.1-006','1.2-006','1.3-008','1.5-002','1.1-008','1.2-008','1.4-002','1.5-004','1.1-010','1.3-002','1.4-004','1.5-006','1.5-008','1.6-002','1.6-004','1.6-006','1.6-008'],
+   type:'ok_issue'},
+  {name:'DAHU Gallery 2 (Evens)', desc:'All DAHUs in auto with no unexpected alarms, DAHU is NOT leaking water. All VFDs in auto. VESDA not in alarm.',
+   cols:['2.1-002','2.2-002','2.3-004','2.4-006','2.1-004','2.2-004','2.3-006','2.4-008','2.1-006','2.2-006','2.3-008','2.5-002','2.1-008','2.2-008','2.4-002','2.5-004','2.1-010','2.3-002','2.4-004','2.5-006','2.5-008','2.6-002','2.6-004','2.6-006','2.6-008'],
+   type:'ok_issue'},
+  {name:'Fire Riser Room', desc:'All valves are in the correct state, no leakages, line pressure (140 to 150 PSI), no unexpected alarms on FCP',
+   cols:['Valves','Pressure','FACP','Nitrogen Gen'],
+   type:'exp_unexp'},
+  {name:'IW Room', desc:'Check that all equipment is in auto and free of alarms. Check for leaks and debris in room and around tanks. Check that line pressure is 35-40 PSI, and MIOX tank level >75%',
+   cols:['Pump Skid 1','Pump Skid 2','Miox Skid','Tanks'],
+   type:'exp_unexp'},
+  {name:'Roof', desc:'Inspect Exhaust Fans, RTUs, and Lightning protection grid. Verify all equipment functioning as expected with no abnormal noise or leaks.',
+   cols:['EFs','RTU','LPG','Lighting'],
+   type:'ok_issue'},
+  {name:'Data Hall', desc:'Check PDCs, power shelves, MaxCool panels and VESDA for unexpected alarms. On the PDC, ensure both sources are available, catcher load is <4 Amps, fans are working properly, and grounding cables are intact. Check cold and hot aisles for water drips. Note all discrepancies.',
+   cols:[],
+   type:'notes_only'}
+];
+
+/* ===== STATE ===== */
+var roundData = {
+  building:'',shift:'',technician:'',date:'',ticketUrl:'',startTime:null,
+  sections:[],status:'not_started'
+};
+var currentSection = 0;
+var photoStore = {}; // {sectionIdx-itemIdx: [base64, ...]}
+var db = null;
+
+/* ===== FIREBASE INIT ===== */
+function initFirebase(){
+  try{
+    var app=firebase.initializeApp({
+      apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',
+      authDomain:'budget-tracket-200b6.firebaseapp.com',
+      databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',
+      projectId:'budget-tracket-200b6',
+      storageBucket:'budget-tracket-200b6.firebasestorage.app',
+      messagingSenderId:'442984201568',
+      appId:'1:442984201568:web:8203ec4ffbf1a05b283205'
+    },'rounds');
+    db=firebase.app('rounds').database();
+  }catch(e){try{db=firebase.app('rounds').database()}catch(e2){}}
+}
+
+function syncToFirebase(){
+  if(!db||!roundData.building||!roundData.date)return;
+  try{
+    var cleanData=JSON.parse(JSON.stringify(roundData));
+    cleanData.lastModified=Date.now();
+    db.ref('rounds/'+roundData.building+'/'+roundData.date+'/'+roundData.startTime).set(cleanData);
+  }catch(e){}
+}
+
+function loadActiveRounds(){
+  if(!db)return;
+  try{
+    db.ref('rounds').on('value',function(snap){
+      var data=snap.val();
+      if(!data)return;
+      var active=[];
+      Object.keys(data).forEach(function(bldg){
+        var dates=data[bldg];
+        if(!dates)return;
+        var today=new Date().toISOString().split('T')[0];
+        var todayRounds=dates[today];
+        if(!todayRounds)return;
+        Object.keys(todayRounds).forEach(function(rid){
+          var r=todayRounds[rid];
+          if(r&&r.status==='in_progress'){
+            active.push({building:bldg,technician:r.technician||'Unknown',shift:r.shift||''});
+          }
+        });
+      });
+      renderActiveRounds(active);
+    });
+  }catch(e){}
+}
+
+function renderActiveRounds(active){
+  var el=document.getElementById('activeRounds');
+  var list=document.getElementById('activeRoundsList');
+  if(active.length===0){el.style.display='none';return}
+  el.style.display='block';
+  var html='';
+  active.forEach(function(a){
+    html+='<div class="active-round-item">🔄 <strong>'+a.building+'</strong> — '+a.technician+' ('+a.shift+')</div>';
+  });
+  list.innerHTML=html;
+}
+
+/* ===== START SCREEN ===== */
+var buildings=['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
+
+function initStartScreen(){
+  var grid=document.getElementById('buildingGrid');
+  var html='';
+  buildings.forEach(function(b){
+    html+='<button class="building-btn" onclick="selectBuilding(\''+b+'\',this)">'+b+'</button>';
+  });
+  grid.innerHTML=html;
+}
+
+function selectBuilding(b,btn){
+  roundData.building=b;
+  var btns=document.querySelectorAll('.building-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+  checkReady();
+}
+
+function selectShift(s,btn){
+  roundData.shift=s;
+  var btns=document.querySelectorAll('.shift-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.remove('selected');
+  btn.classList.add('selected');
+  checkReady();
+}
+
+function checkReady(){
+  var ready=roundData.building&&roundData.shift&&document.getElementById('techName').value.trim();
+  document.getElementById('beginBtn').disabled=!ready;
+}
+
+document.getElementById('techName').addEventListener('input',checkReady);
+
+/* ===== BEGIN ROUNDS ===== */
+function beginRounds(){
+  roundData.technician=document.getElementById('techName').value.trim();
+  roundData.ticketUrl=document.getElementById('ticketUrl').value.trim();
+  roundData.date=new Date().toISOString().split('T')[0];
+  roundData.startTime=Date.now();
+  roundData.status='in_progress';
+  
+  // Initialize section data
+  roundData.sections=[];
+  sections.forEach(function(sec){
+    var items=[];
+    sec.cols.forEach(function(col){
+      items.push({name:col,status:'',note:'',photos:0});
+    });
+    roundData.sections.push({
+      name:sec.name,type:sec.type,status:'pending',allOk:false,
+      completedBy:'',completedAt:null,notes:'',items:items
+    });
+  });
+  
+  currentSection=0;
+  document.getElementById('headerSub').textContent=roundData.building+' — '+roundData.technician+' — '+roundData.shift;
+  syncToFirebase();
+  showScreen('walkScreen');
+  renderWalkthrough();
+}
+
+/* ===== SCREEN NAVIGATION ===== */
+function showScreen(id){
+  var screens=document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+/* ===== WALKTHROUGH ===== */
+function renderWalkthrough(){
+  var sec=sections[currentSection];
+  var secData=roundData.sections[currentSection];
+  
+  // Progress
+  var pct=Math.round(((currentSection)/sections.length)*100);
+  document.getElementById('walkProgressFill').style.width=pct+'%';
+  document.getElementById('walkProgressText').textContent='Section '+(currentSection+1)+' of '+sections.length;
+  document.getElementById('walkSectionName').textContent=sec.name;
+  document.getElementById('walkSectionDesc').textContent=sec.desc;
+  
+  // Progress dots
+  var dotsHtml='';
+  for(var d=0;d<sections.length;d++){
+    var cls='progress-dot';
+    if(d===currentSection)cls+=' current';
+    else if(roundData.sections[d].status==='complete'){
+      var hasIssue=false;
+      roundData.sections[d].items.forEach(function(it){if(it.status==='issue'||it.status==='unexpected')hasIssue=true});
+      cls+=hasIssue?' has-issue':' done';
+    }
+    dotsHtml+='<div class="'+cls+'" onclick="jumpToSection('+d+')"></div>';
+  }
+  document.getElementById('progressDots').innerHTML=dotsHtml;
+  
+  // Content
+  var content=document.getElementById('walkContent');
+  var html='';
+  
+  if(sec.type==='notes_only'){
+    html+='<button class="all-ok-btn" onclick="allOkNotesOnly()">✅ ALL OK — Mark Complete</button>';
+    html+='<div class="section-notes"><label>Notes / Observations</label>';
+    html+='<textarea id="notesOnlyArea" placeholder="Enter observations..." oninput="updateNotesOnly()" rows="6">'+escHtml(secData.notes)+'</textarea></div>';
+  }else{
+    var okLabel=sec.type==='exp_unexp'?'Expected':'OK';
+    var issueLabel=sec.type==='exp_unexp'?'Unexpected':'Issue';
+    
+    html+='<button class="all-ok-btn" onclick="markAllOk()">✅ ALL '+okLabel.toUpperCase()+' — Skip to Next</button>';
+    
+    secData.items.forEach(function(item,idx){
+      var statusClass='';
+      var statusText='';
+      if(item.status==='ok'||item.status==='expected'){statusClass='ok';statusText='✓'}
+      else if(item.status==='issue'||item.status==='unexpected'){statusClass='issue';statusText='✗'}
+      
+      html+='<div class="swipe-card-wrap" id="wrap-'+currentSection+'-'+idx+'">';
+      html+='<div class="swipe-bg swipe-bg-ok">'+okLabel+' ✓</div>';
+      html+='<div class="swipe-bg swipe-bg-issue">'+issueLabel+' ✗</div>';
+      html+='<div class="swipe-card" id="card-'+currentSection+'-'+idx+'" data-section="'+currentSection+'" data-item="'+idx+'">';
+      html+='<span class="item-name">'+escHtml(item.name)+'</span>';
+      html+='<span class="item-status '+statusClass+'">'+statusText+'</span>';
+      html+='</div></div>';
+      
+      // Issue detail
+      if(item.status==='issue'||item.status==='unexpected'){
+        html+='<div class="issue-detail" id="detail-'+currentSection+'-'+idx+'">';
+        html+='<textarea class="issue-note" placeholder="Describe the issue..." oninput="updateItemNote('+currentSection+','+idx+',this.value)">'+escHtml(item.note)+'</textarea>';
+        html+='<div class="photo-row">';
+        var photoKey=currentSection+'-'+idx;
+        var photos=photoStore[photoKey]||[];
+        if(photos.length<3){
+          html+='<button class="photo-btn" onclick="triggerPhoto('+currentSection+','+idx+')">📷 Photo</button>';
+          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
+        }
+        photos.forEach(function(p,pi){
+          html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+p+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">✕</button></div>';
+        });
+        html+='</div></div>';
+      }
+    });
+    
+    // Section notes
+    html+='<div class="section-notes"><label>Section Notes (optional)</label>';
+    html+='<textarea placeholder="General notes for this section..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div>';
+  }
+  
+  content.innerHTML=html;
+  content.scrollTop=0;
+  
+  // Attach swipe handlers
+  if(sec.type!=='notes_only'){
+    secData.items.forEach(function(item,idx){
+      var card=document.getElementById('card-'+currentSection+'-'+idx);
+      if(card)attachSwipe(card,currentSection,idx,sec.type);
+    });
+  }
+  
+  updateNavButtons();
+}
+
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ===== SWIPE HANDLING ===== */
+function attachSwipe(card,sIdx,iIdx,type){
+  var startX=0,startY=0,currentX=0,isSwiping=false,isScrolling=false;
+  
+  card.addEventListener('touchstart',function(e){
+    var touch=e.touches[0];
+    startX=touch.clientX;
+    startY=touch.clientY;
+    currentX=startX;
+    isSwiping=false;
+    isScrolling=false;
+    card.classList.add('swiping');
+    card.classList.remove('snap-back');
+  },{passive:true});
+  
+  card.addEventListener('touchmove',function(e){
+    if(isScrolling)return;
+    var touch=e.touches[0];
+    var dx=touch.clientX-startX;
+    var dy=touch.clientY-startY;
+    
+    if(!isSwiping&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>10){
+      isScrolling=true;
+      card.classList.remove('swiping');
+      return;
+    }
+    
+    if(Math.abs(dx)>10)isSwiping=true;
+    if(isSwiping){
+      e.preventDefault();
+      currentX=touch.clientX;
+      card.style.transform='translateX('+dx+'px)';
+    }
+  },{passive:false});
+  
+  card.addEventListener('touchend',function(e){
+    card.classList.remove('swiping');
+    var dx=currentX-startX;
+    
+    if(isSwiping&&dx>80){
+      // Swipe right = OK/Expected
+      card.style.transform='translateX(100%)';
+      setTimeout(function(){
+        var status=type==='exp_unexp'?'expected':'ok';
+        setItemStatus(sIdx,iIdx,status);
+      },150);
+    }else if(isSwiping&&dx<-80){
+      // Swipe left = Issue/Unexpected
+      card.style.transform='translateX(-100%)';
+      setTimeout(function(){
+        var status=type==='exp_unexp'?'unexpected':'issue';
+        setItemStatus(sIdx,iIdx,status);
+      },150);
+    }else{
+      card.classList.add('snap-back');
+      card.style.transform='translateX(0)';
+    }
+    isSwiping=false;
+  },{passive:true});
+  
+  // Tap to undo
+  card.addEventListener('click',function(){
+    if(isSwiping)return;
+    var item=roundData.sections[sIdx].items[iIdx];
+    if(item.status){
+      item.status='';
+      item.note='';
+      var photoKey=sIdx+'-'+iIdx;
+      delete photoStore[photoKey];
+      roundData.sections[sIdx].items[iIdx].photos=0;
+      renderWalkthrough();
+    }
+  });
+}
+
+function setItemStatus(sIdx,iIdx,status){
+  roundData.sections[sIdx].items[iIdx].status=status;
+  checkSectionComplete(sIdx);
+  renderWalkthrough();
+  syncToFirebase();
+}
+
+/* ===== ALL OK ===== */
+function markAllOk(){
+  var sec=sections[currentSection];
+  var secData=roundData.sections[currentSection];
+  var status=sec.type==='exp_unexp'?'expected':'ok';
+  secData.items.forEach(function(item){
+    if(!item.status)item.status=status;
+  });
+  secData.allOk=true;
+  secData.status='complete';
+  secData.completedBy=roundData.technician;
+  secData.completedAt=Date.now();
+  syncToFirebase();
+  if(currentSection<sections.length-1){
+    currentSection++;
+    renderWalkthrough();
+    showToast('✅ All marked — moved to next section');
+  }else{
+    showSummary();
+  }
+}
+
+function allOkNotesOnly(){
+  var secData=roundData.sections[currentSection];
+  secData.allOk=true;
+  secData.status='complete';
+  secData.completedBy=roundData.technician;
+  secData.completedAt=Date.now();
+  syncToFirebase();
+  if(currentSection<sections.length-1){
+    currentSection++;
+    renderWalkthrough();
+    showToast('✅ Marked complete');
+  }else{
+    showSummary();
+  }
+}
+
+/* ===== SECTION COMPLETION CHECK ===== */
+function checkSectionComplete(sIdx){
+  var secData=roundData.sections[sIdx];
+  var allDone=true;
+  var allGood=true;
+  secData.items.forEach(function(item){
+    if(!item.status)allDone=false;
+    if(item.status==='issue'||item.status==='unexpected')allGood=false;
+  });
+  if(allDone){
+    secData.status='complete';
+    secData.allOk=allGood;
+    secData.completedBy=roundData.technician;
+    secData.completedAt=Date.now();
+  }
+}
+
+/* ===== NAVIGATION ===== */
+function nextSection(){
+  if(currentSection<sections.length-1){
+    currentSection++;
+    renderWalkthrough();
+  }else{
+    showSummary();
+  }
+}
+
+function prevSection(){
+  if(currentSection>0){
+    currentSection--;
+    renderWalkthrough();
+  }
+}
+
+function jumpToSection(idx){
+  currentSection=idx;
+  renderWalkthrough();
+}
+
+function updateNavButtons(){
+  var secData=roundData.sections[currentSection];
+  var nextBtn=document.getElementById('nextBtn');
+  var allMarked=true;
+  var allIssuesNoted=true;
+  
+  if(sections[currentSection].type==='notes_only'){
+    allMarked=true;
+  }else{
+    secData.items.forEach(function(item){
+      if(!item.status)allMarked=false;
+      if((item.status==='issue'||item.status==='unexpected')&&!item.note)allIssuesNoted=false;
+    });
+  }
+  
+  nextBtn.disabled=!(allMarked&&allIssuesNoted);
+  nextBtn.textContent=currentSection===sections.length-1?'View Summary →':'Next Section →';
+}
+
+/* ===== ITEM UPDATES ===== */
+function updateItemNote(sIdx,iIdx,val){
+  roundData.sections[sIdx].items[iIdx].note=val;
+  updateNavButtons();
+  syncToFirebase();
+}
+
+function updateSectionNotes(sIdx,val){
+  roundData.sections[sIdx].notes=val;
+}
+
+function updateNotesOnly(){
+  var ta=document.getElementById('notesOnlyArea');
+  if(ta)roundData.sections[currentSection].notes=ta.value;
+}
+
+/* ===== PHOTOS ===== */
+function triggerPhoto(sIdx,iIdx){
+  var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+  if(inp)inp.click();
+}
+
+function handlePhoto(input,sIdx,iIdx){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      var maxW=800;
+      var w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+      canvas.width=w;canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.8);
+      var key=sIdx+'-'+iIdx;
+      if(!photoStore[key])photoStore[key]=[];
+      if(photoStore[key].length<3){
+        photoStore[key].push(compressed);
+        roundData.sections[sIdx].items[iIdx].photos=photoStore[key].length;
+        renderWalkthrough();
+        syncToFirebase();
+      }
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(key,idx){
+  if(photoStore[key]){
+    photoStore[key].splice(idx,1);
+    var parts=key.split('-');
+    roundData.sections[parseInt(parts[0])].items[parseInt(parts[1])].photos=photoStore[key].length;
+    renderWalkthrough();
+  }
+}
+
+function previewPhoto(key,idx){
+  var img=document.getElementById('photoModalImg');
+  img.src=photoStore[key][idx];
+  document.getElementById('photoModal').classList.add('active');
+}
+
+function closePhotoModal(){
+  document.getElementById('photoModal').classList.remove('active');
+}
+
+/* ===== SUMMARY ===== */
+function showSummary(){
+  showScreen('summaryScreen');
+  
+  var totalItems=0,okCount=0,issueCount=0,photoCount=0;
+  roundData.sections.forEach(function(sec){
+    sec.items.forEach(function(item){
+      totalItems++;
+      if(item.status==='ok'||item.status==='expected')okCount++;
+      if(item.status==='issue'||item.status==='unexpected')issueCount++;
+      photoCount+=item.photos||0;
+    });
+  });
+  
+  document.getElementById('summaryStats').innerHTML=
+    '<div class="summary-stat green"><div class="num">'+okCount+'</div><div class="lbl">OK</div></div>'+
+    '<div class="summary-stat red"><div class="num">'+issueCount+'</div><div class="lbl">Issues</div></div>'+
+    '<div class="summary-stat orange"><div class="num">'+photoCount+'</div><div class="lbl">Photos</div></div>';
+  
+  var secHtml='';
+  roundData.sections.forEach(function(sec,sIdx){
+    var secIssues=[];
+    sec.items.forEach(function(item){
+      if(item.status==='issue'||item.status==='unexpected')secIssues.push(item);
+    });
+    var badgeClass=secIssues.length>0?'issue':'ok';
+    var badgeText=secIssues.length>0?secIssues.length+' issue'+(secIssues.length>1?'s':''):'All OK';
+    
+    secHtml+='<div class="summary-section">';
+    secHtml+='<div class="summary-section-header" onclick="toggleSummaryDetail('+sIdx+')">';
+    secHtml+='<span class="name">'+escHtml(sec.name)+'</span>';
+    secHtml+='<span class="badge '+badgeClass+'">'+badgeText+'</span>';
+    secHtml+='</div>';
+    secHtml+='<div class="summary-section-detail" id="sumDetail-'+sIdx+'">';
+    if(secIssues.length>0){
+      secIssues.forEach(function(item){
+        secHtml+='<div class="issue-item"><div class="issue-name">'+escHtml(item.name)+'</div>';
+        if(item.note)secHtml+='<div class="issue-note">'+escHtml(item.note)+'</div>';
+        if(item.photos)secHtml+='<div style="font-size:11px;color:var(--muted)">📷 '+item.photos+' photo(s)</div>';
+        secHtml+='</div>';
+      });
+    }else if(sec.type==='notes_only'&&sec.notes){
+      secHtml+='<div class="issue-item"><div class="issue-note">'+escHtml(sec.notes)+'</div></div>';
+    }else{
+      secHtml+='<div style="color:var(--green);font-size:13px;padding:4px 0">All items checked — no issues</div>';
+    }
+    if(sec.completedBy){
+      secHtml+='<div class="completed-info">Completed by '+escHtml(sec.completedBy)+' at '+new Date(sec.completedAt).toLocaleTimeString()+'</div>';
+    }
+    secHtml+='</div></div>';
+  });
+  document.getElementById('summarySections').innerHTML=secHtml;
+}
+
+function toggleSummaryDetail(idx){
+  var el=document.getElementById('sumDetail-'+idx);
+  if(el)el.classList.toggle('open');
+}
+
+/* ===== SUBMIT ===== */
+function submitRounds(){
+  roundData.status='completed';
+  roundData.endTime=Date.now();
+  
+  // Calculate summary
+  var totalItems=0,okCount=0,issueCount=0,photoCount=0;
+  roundData.sections.forEach(function(sec){
+    sec.items.forEach(function(item){
+      totalItems++;
+      if(item.status==='ok'||item.status==='expected')okCount++;
+      if(item.status==='issue'||item.status==='unexpected')issueCount++;
+      photoCount+=item.photos||0;
+    });
+  });
+  roundData.summary={totalItems:totalItems,okCount:okCount,issueCount:issueCount,photoCount:photoCount};
+  syncToFirebase();
+  
+  // Generate Excel
+  var excelHtml=generateExcel();
+  var hasPhotos=photoCount>0;
+  var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
+  
+  if(hasPhotos&&typeof JSZip!=='undefined'){
+    var zip=new JSZip();
+    zip.file(baseName+'.xls',excelHtml);
+    var photoFolder=zip.folder('photos');
+    Object.keys(photoStore).forEach(function(key){
+      var photos=photoStore[key];
+      var parts=key.split('-');
+      var sIdx=parseInt(parts[0]);
+      var iIdx=parseInt(parts[1]);
+      var secName=sections[sIdx].name.replace(/[^a-zA-Z0-9]/g,'_').substring(0,15);
+      var itemName=sections[sIdx].cols[iIdx]?sections[sIdx].cols[iIdx].replace(/[^a-zA-Z0-9]/g,'_').substring(0,15):'item'+iIdx;
+      photos.forEach(function(p,pi){
+        var b64=p.split(',')[1];
+        photoFolder.file(secName+'_'+itemName+'_'+(pi+1)+'.jpg',b64,{base64:true});
+      });
+    });
+    zip.generateAsync({type:'blob'}).then(function(blob){
+      downloadBlob(blob,baseName+'.zip');
+      openTicketAndEmail(baseName);
+    });
+  }else{
+    var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});
+    downloadBlob(blob,baseName+'.xls');
+    openTicketAndEmail(baseName);
+  }
+  
+  showToast('✅ Submitted! Attach the file to the SIM ticket.');
+}
+
+function downloadBlob(blob,name){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function openTicketAndEmail(baseName){
+  // Open SIM ticket
+  var ticketUrl=roundData.ticketUrl;
+  if(ticketUrl){
+    if(!/^https?:\/\//.test(ticketUrl)){
+      ticketUrl=ticketUrl.replace(/^tt\//,'');
+      ticketUrl='https://t.corp.amazon.com/'+ticketUrl;
+    }
+    window.open(ticketUrl,'_blank');
+  }
+  
+  // Email
+  var subject=encodeURIComponent(roundData.building+' Daily Rounds - '+roundData.date+' - '+roundData.shift);
+  var totalItems=0,okCount=0,issueCount=0;
+  roundData.sections.forEach(function(sec){
+    sec.items.forEach(function(item){
+      totalItems++;
+      if(item.status==='ok'||item.status==='expected')okCount++;
+      if(item.status==='issue'||item.status==='unexpected')issueCount++;
+    });
+  });
+  var body=roundData.building+' Daily Rounds\n';
+  body+='Date: '+roundData.date+'\n';
+  body+='Technician: '+roundData.technician+'\n';
+  body+='Shift: '+roundData.shift+'\n\n';
+  body+='Summary: '+okCount+'/'+totalItems+' OK, '+issueCount+' issues\n\n';
+  if(issueCount>0){
+    body+='ISSUES:\n';
+    roundData.sections.forEach(function(sec){
+      sec.items.forEach(function(item){
+        if(item.status==='issue'||item.status==='unexpected'){
+          body+='- '+sec.name+' > '+item.name+': '+item.note+'\n';
+        }
+      });
+    });
+  }
+  if(ticketUrl)body+='\nDaily Ticket: '+ticketUrl+'\n';
+  body+='\n(Excel file attached separately)';
+  window.open('mailto:SBN207@groups.amazon.com?subject='+subject+'&body='+encodeURIComponent(body),'_blank');
+}
+
+function generateExcel(){
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
+  html+='<head><meta charset="UTF-8"><style>';
+  html+='table{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11px;width:100%}';
+  html+='td,th{border:1px solid #d5d9d9;padding:6px 10px}';
+  html+='.title{background:#232f3e;color:#ff9900;font-size:16px;font-weight:bold;text-align:center;border:none}';
+  html+='.info-label{background:#f4f4f4;font-weight:bold;border:none}';
+  html+='.info-value{border:none}';
+  html+='.section-title{background:#ff9900;color:#232f3e;font-weight:bold;font-size:12px}';
+  html+='.ok{background:#dcfce7;color:#166534;text-align:center}';
+  html+='.issue{background:#fef2f2;color:#991b1b;font-weight:bold;text-align:center}';
+  html+='.note-cell{background:#fffbeb;font-style:italic}';
+  html+='.completed{background:#f0fdf4;color:#166534;font-size:10px;font-style:italic}';
+  html+='.summary-header{background:#ff9900;color:#232f3e;font-weight:bold}';
+  html+='.summary{background:#fff8ec}';
+  html+='.warning{background:#fef2f2;color:#991b1b;font-weight:bold;text-align:center;font-size:10px}';
+  html+='</style></head><body>';
+  html+='<table>';
+  html+='<tr><td class="title" colspan="4">SBN DAILY ROUNDS REPORT</td></tr>';
+  html+='<tr><td class="info-label">Building</td><td class="info-value">'+roundData.building+'</td><td class="info-label">Date</td><td class="info-value">'+roundData.date+'</td></tr>';
+  html+='<tr><td class="info-label">Technician</td><td class="info-value">'+roundData.technician+'</td><td class="info-label">Shift</td><td class="info-value">'+roundData.shift+'</td></tr>';
+  if(roundData.ticketUrl){
+    var ticketDisplay=roundData.ticketUrl;
+    var ticketHref=ticketDisplay;
+    if(!/^https?:\/\//.test(ticketHref)){ticketHref=ticketHref.replace(/^tt\//,'');ticketHref='https://t.corp.amazon.com/'+ticketHref}
+    html+='<tr><td class="info-label">Daily Ticket</td><td class="info-value" colspan="3"><a href="'+ticketHref+'">'+escHtml(ticketDisplay)+'</a></td></tr>';
+  }
+  html+='<tr><td class="warning" colspan="4">ENSURE ALL DOORS IN PFHO\'D SPACES ARE CLOSED/LOCKED</td></tr>';
+  html+='<tr><td colspan="4" style="border:none;height:8px"></td></tr>';
+  
+  roundData.sections.forEach(function(sec,sIdx){
+    html+='<tr><td class="section-title" colspan="4">'+escHtml(sec.name)+'</td></tr>';
+    if(sec.type==='notes_only'){
+      html+='<tr><td class="note-cell" colspan="4">'+(sec.notes?escHtml(sec.notes):'No notes')+'</td></tr>';
+    }else{
+      sec.items.forEach(function(item){
+        var cls=(item.status==='ok'||item.status==='expected')?'ok':'issue';
+        if(!item.status)cls='';
+        var label=item.status||'-';
+        html+='<tr><td>'+escHtml(item.name)+'</td><td class="'+cls+'">'+label.toUpperCase()+'</td>';
+        html+='<td class="'+(item.note?'note-cell':'')+'">'+(item.note?escHtml(item.note):'')+'</td>';
+        html+='<td>'+(item.photos?item.photos+' photo(s)':'')+'</td></tr>';
+      });
+    }
+    if(sec.completedBy){
+      html+='<tr><td class="completed" colspan="4">Completed by '+escHtml(sec.completedBy)+' at '+new Date(sec.completedAt).toLocaleTimeString()+'</td></tr>';
+    }
+    if(sec.notes&&sec.type!=='notes_only'){
+      html+='<tr><td class="note-cell" colspan="4">Section notes: '+escHtml(sec.notes)+'</td></tr>';
+    }
+    html+='<tr><td colspan="4" style="border:none;height:4px"></td></tr>';
+  });
+  
+  // Summary
+  var totalItems=0,okCount=0,issueCount=0;
+  roundData.sections.forEach(function(sec){
+    sec.items.forEach(function(item){
+      totalItems++;
+      if(item.status==='ok'||item.status==='expected')okCount++;
+      if(item.status==='issue'||item.status==='unexpected')issueCount++;
+    });
+  });
+  var pct=totalItems>0?Math.round((okCount/totalItems)*100):0;
+  html+='<tr><td class="summary-header" colspan="4">SUMMARY</td></tr>';
+  html+='<tr><td class="summary">Total Checks</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+' ('+pct+'%)</td></tr>';
+  html+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td class="summary"></td><td class="summary"></td></tr>';
+  html+='</table></body></html>';
+  return html;
+}
+
+/* ===== TOAST ===== */
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},3000);
+}
+
+/* ===== SERVICE WORKER ===== */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+
+/* ===== INIT ===== */
+function waitForFirebase(){
+  if(typeof firebase!=='undefined'&&firebase.initializeApp){
+    initFirebase();
+    loadActiveRounds();
+  }else{
+    setTimeout(waitForFirebase,100);
+  }
+}
+waitForFirebase();
+initStartScreen();
+</script>
+</body>
+</html>
