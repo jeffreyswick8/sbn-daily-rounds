@@ -9,9 +9,222 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>SBN Daily Rounds</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer>
+/* ===== CAMERA FOR WINDOWS TABLETS ===== */
+var cameraStream = null;
+var camSIdx = -1;
+var camIIdx = -1;
+
+function openCamera(sIdx, iIdx) {
+  camSIdx = sIdx;
+  camIIdx = iIdx;
+  // Try getUserMedia (works on Windows tablets with Chrome)
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
+    }).then(function(stream) {
+      cameraStream = stream;
+      var video = document.getElementById('cameraVideo');
+      video.srcObject = stream;
+      video.onloadedmetadata = function() {
+        video.play();
+      };
+      var modal = document.getElementById('cameraModal');
+      modal.style.display = 'flex';
+    }).catch(function(err) {
+      // Camera denied or not available — fall back to file picker
+      var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+      if (inp) inp.click();
+    });
+  } else {
+    // No getUserMedia — fall back to file picker
+    var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+    if (inp) inp.click();
+  }
+}
+
+function capturePhoto() {
+  var video = document.getElementById('cameraVideo');
+  var canvas = document.getElementById('cameraCanvas');
+  var maxW = 800;
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+  if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, w, h);
+  var compressed = canvas.toDataURL('image/jpeg', 0.8);
+  var key = camSIdx + '-' + camIIdx;
+  if (!photoStore[key]) photoStore[key] = [];
+  if (photoStore[key].length < 3) {
+    photoStore[key].push(compressed);
+    roundData.sections[camSIdx].items[camIIdx].photos = photoStore[key].length;
+    renderWalkthrough();
+    syncToFirebase();
+  }
+  closeCameraModal();
+}
+
+function closeCameraModal() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  var video = document.getElementById('cameraVideo');
+  video.srcObject = null;
+  document.getElementById('cameraModal').style.display = 'none';
+}
+
+// Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
+document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer>
+/* ===== CAMERA FOR WINDOWS TABLETS ===== */
+var cameraStream = null;
+var camSIdx = -1;
+var camIIdx = -1;
+
+function openCamera(sIdx, iIdx) {
+  camSIdx = sIdx;
+  camIIdx = iIdx;
+  // Try getUserMedia (works on Windows tablets with Chrome)
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
+    }).then(function(stream) {
+      cameraStream = stream;
+      var video = document.getElementById('cameraVideo');
+      video.srcObject = stream;
+      video.onloadedmetadata = function() {
+        video.play();
+      };
+      var modal = document.getElementById('cameraModal');
+      modal.style.display = 'flex';
+    }).catch(function(err) {
+      // Camera denied or not available — fall back to file picker
+      var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+      if (inp) inp.click();
+    });
+  } else {
+    // No getUserMedia — fall back to file picker
+    var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+    if (inp) inp.click();
+  }
+}
+
+function capturePhoto() {
+  var video = document.getElementById('cameraVideo');
+  var canvas = document.getElementById('cameraCanvas');
+  var maxW = 800;
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+  if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, w, h);
+  var compressed = canvas.toDataURL('image/jpeg', 0.8);
+  var key = camSIdx + '-' + camIIdx;
+  if (!photoStore[key]) photoStore[key] = [];
+  if (photoStore[key].length < 3) {
+    photoStore[key].push(compressed);
+    roundData.sections[camSIdx].items[camIIdx].photos = photoStore[key].length;
+    renderWalkthrough();
+    syncToFirebase();
+  }
+  closeCameraModal();
+}
+
+function closeCameraModal() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  var video = document.getElementById('cameraVideo');
+  video.srcObject = null;
+  document.getElementById('cameraModal').style.display = 'none';
+}
+
+// Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
+document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer>
+/* ===== CAMERA FOR WINDOWS TABLETS ===== */
+var cameraStream = null;
+var camSIdx = -1;
+var camIIdx = -1;
+
+function openCamera(sIdx, iIdx) {
+  camSIdx = sIdx;
+  camIIdx = iIdx;
+  // Try getUserMedia (works on Windows tablets with Chrome)
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
+    }).then(function(stream) {
+      cameraStream = stream;
+      var video = document.getElementById('cameraVideo');
+      video.srcObject = stream;
+      video.onloadedmetadata = function() {
+        video.play();
+      };
+      var modal = document.getElementById('cameraModal');
+      modal.style.display = 'flex';
+    }).catch(function(err) {
+      // Camera denied or not available — fall back to file picker
+      var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+      if (inp) inp.click();
+    });
+  } else {
+    // No getUserMedia — fall back to file picker
+    var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+    if (inp) inp.click();
+  }
+}
+
+function capturePhoto() {
+  var video = document.getElementById('cameraVideo');
+  var canvas = document.getElementById('cameraCanvas');
+  var maxW = 800;
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+  if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, w, h);
+  var compressed = canvas.toDataURL('image/jpeg', 0.8);
+  var key = camSIdx + '-' + camIIdx;
+  if (!photoStore[key]) photoStore[key] = [];
+  if (photoStore[key].length < 3) {
+    photoStore[key].push(compressed);
+    roundData.sections[camSIdx].items[camIIdx].photos = photoStore[key].length;
+    renderWalkthrough();
+    syncToFirebase();
+  }
+  closeCameraModal();
+}
+
+function closeCameraModal() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  var video = document.getElementById('cameraVideo');
+  video.srcObject = null;
+  document.getElementById('cameraModal').style.display = 'none';
+}
+
+// Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
+document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+
+</script>
 <style>
 :root{--bg:#1a2332;--surface:#232f3e;--card:#2d3a4a;--accent:#ff9900;--accent-dk:#cc7a00;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#94a3b8;--border:#374151;--radius:12px}
 body.light-mode{--bg:#f0f2f5;--surface:#ffffff;--card:#e8ecf1;--text:#1a1a1a;--muted:#64748b;--border:#d1d5db}
@@ -55,7 +268,7 @@ body.light-mode .btn-allok{background:#dcfce7;color:#166534;border:2px solid #22
 .item-card .status-badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700}
 .status-ok{background:rgba(34,197,94,0.2);color:var(--green)}
 .status-issue{background:rgba(239,68,68,0.2);color:var(--red)}
-.swipe-bg{position:absolute;top:0;bottom:0;display:flex;align-items:center;padding:0 20px;font-weight:700;font-size:14px}
+.swipe-bg{position:absolute;top:0;bottom:0;display:none;align-items:center;padding:0 20px;font-weight:700;font-size:14px}
 .swipe-bg-ok{left:0;right:0;background:#065f46;color:#22c55e;justify-content:flex-end}
 .swipe-bg-issue{left:0;right:0;background:#7f1d1d;color:#ef4444}
 .item-content{position:relative;z-index:1;background:var(--card);transition:transform 0.1s}
@@ -405,8 +618,8 @@ function renderWalkthrough() {
         var photoKey = currentSection + '-' + idx;
         var photos = photoStore[photoKey] || [];
         if (photos.length < 3) {
-          html += '<label class="photo-btn" for="fileInp-' + currentSection + '-' + idx + '">&#128247; Photo</label>';
-          html += '<input type="file" id="fileInp-' + currentSection + '-' + idx + '" class="file-input-hidden" accept="image/*" capture="environment" onchange="handlePhoto(this,' + currentSection + ',' + idx + ')">';
+          html += '<button type="button" class="photo-btn" onclick="openCamera(' + currentSection + ',' + idx + ')">&#128247; Photo</button>';
+          html += '<input type="file" id="fileInp-' + currentSection + '-' + idx + '" class="file-input-hidden" accept="image/*" onchange="handlePhoto(this,' + currentSection + ',' + idx + ')">';
         }
         if (photos.length > 0) {
           html += '<div class="photo-thumbs">';
@@ -456,6 +669,11 @@ function attachSwipe(card, sIdx, iIdx, type) {
     var dy = t.clientY - startY;
     if (!swiping && Math.abs(dy) > Math.abs(dx)) { scrolling = true; return; }
     swiping = true;
+    var okBg = card.querySelector('.swipe-bg-ok');
+    var issueBg = card.querySelector('.swipe-bg-issue');
+    if (dx > 10) { okBg.style.display = 'flex'; issueBg.style.display = 'none'; }
+    else if (dx < -10) { issueBg.style.display = 'flex'; okBg.style.display = 'none'; }
+    else { okBg.style.display = 'none'; issueBg.style.display = 'none'; }
     content.style.transform = 'translateX(' + dx + 'px)';
   }, {passive: true});
 
@@ -470,6 +688,9 @@ function attachSwipe(card, sIdx, iIdx, type) {
       markItem(sIdx, iIdx, type === 'exp_unexp' ? 'unexpected' : 'issue');
     }
     content.style.transform = 'translateX(0)';
+    // Hide swipe backgrounds after release
+    card.querySelector('.swipe-bg-ok').style.display = 'none';
+    card.querySelector('.swipe-bg-issue').style.display = 'none';
   });
 
   // Also support click/tap to toggle
@@ -969,6 +1190,77 @@ function waitForFirebase() {
 loadTheme();
 initStartScreen();
 waitForFirebase();
+
+
+/* ===== CAMERA FOR WINDOWS TABLETS ===== */
+var cameraStream = null;
+var camSIdx = -1;
+var camIIdx = -1;
+
+function openCamera(sIdx, iIdx) {
+  camSIdx = sIdx;
+  camIIdx = iIdx;
+  // Try getUserMedia (works on Windows tablets with Chrome)
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
+    }).then(function(stream) {
+      cameraStream = stream;
+      var video = document.getElementById('cameraVideo');
+      video.srcObject = stream;
+      video.onloadedmetadata = function() {
+        video.play();
+      };
+      var modal = document.getElementById('cameraModal');
+      modal.style.display = 'flex';
+    }).catch(function(err) {
+      // Camera denied or not available — fall back to file picker
+      var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+      if (inp) inp.click();
+    });
+  } else {
+    // No getUserMedia — fall back to file picker
+    var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
+    if (inp) inp.click();
+  }
+}
+
+function capturePhoto() {
+  var video = document.getElementById('cameraVideo');
+  var canvas = document.getElementById('cameraCanvas');
+  var maxW = 800;
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+  if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, w, h);
+  var compressed = canvas.toDataURL('image/jpeg', 0.8);
+  var key = camSIdx + '-' + camIIdx;
+  if (!photoStore[key]) photoStore[key] = [];
+  if (photoStore[key].length < 3) {
+    photoStore[key].push(compressed);
+    roundData.sections[camSIdx].items[camIIdx].photos = photoStore[key].length;
+    renderWalkthrough();
+    syncToFirebase();
+  }
+  closeCameraModal();
+}
+
+function closeCameraModal() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  var video = document.getElementById('cameraVideo');
+  video.srcObject = null;
+  document.getElementById('cameraModal').style.display = 'none';
+}
+
+// Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
+document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
 
 </script>
 </body>
