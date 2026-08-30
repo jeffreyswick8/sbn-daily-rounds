@@ -37,6 +37,66 @@ if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.st
 }
 }catch(e){}
 
+
+var cameraStream=null;
+var cameraSIdx=-1;
+var cameraIIdx=-1;
+
+function openCamera(sIdx,iIdx){
+cameraSIdx=sIdx;
+cameraIIdx=iIdx;
+// Try getUserMedia first (works on Windows tablets)
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+.then(function(stream){
+cameraStream=stream;
+var video=document.getElementById('cameraVideo');
+video.srcObject=stream;
+document.getElementById('cameraModal').style.display='flex';
+})
+.catch(function(err){
+// Camera access denied or not available — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+});
+}else{
+// No getUserMedia support — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+}
+}
+
+function capturePhoto(){
+var video=document.getElementById('cameraVideo');
+var canvas=document.getElementById('cameraCanvas');
+var maxW=800;
+var w=video.videoWidth;
+var h=video.videoHeight;
+if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+canvas.width=w;
+canvas.height=h;
+var ctx=canvas.getContext('2d');
+ctx.drawImage(video,0,0,w,h);
+var compressed=canvas.toDataURL('image/jpeg',0.8);
+var key=cameraSIdx+'-'+cameraIIdx;
+if(!photoStore[key])photoStore[key]=[];
+if(photoStore[key].length<3){
+photoStore[key].push(compressed);
+roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
+renderWalkthrough();
+syncToFirebase();
+}
+closeCameraModal();
+}
+
+function closeCameraModal(){
+if(cameraStream){
+cameraStream.getTracks().forEach(function(track){track.stop()});
+cameraStream=null;
+}
+document.getElementById('cameraModal').style.display='none';
+}
+
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer>
 function toggleMode(){
@@ -66,6 +126,66 @@ if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.st
 }
 }catch(e){}
 
+
+var cameraStream=null;
+var cameraSIdx=-1;
+var cameraIIdx=-1;
+
+function openCamera(sIdx,iIdx){
+cameraSIdx=sIdx;
+cameraIIdx=iIdx;
+// Try getUserMedia first (works on Windows tablets)
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+.then(function(stream){
+cameraStream=stream;
+var video=document.getElementById('cameraVideo');
+video.srcObject=stream;
+document.getElementById('cameraModal').style.display='flex';
+})
+.catch(function(err){
+// Camera access denied or not available — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+});
+}else{
+// No getUserMedia support — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+}
+}
+
+function capturePhoto(){
+var video=document.getElementById('cameraVideo');
+var canvas=document.getElementById('cameraCanvas');
+var maxW=800;
+var w=video.videoWidth;
+var h=video.videoHeight;
+if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+canvas.width=w;
+canvas.height=h;
+var ctx=canvas.getContext('2d');
+ctx.drawImage(video,0,0,w,h);
+var compressed=canvas.toDataURL('image/jpeg',0.8);
+var key=cameraSIdx+'-'+cameraIIdx;
+if(!photoStore[key])photoStore[key]=[];
+if(photoStore[key].length<3){
+photoStore[key].push(compressed);
+roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
+renderWalkthrough();
+syncToFirebase();
+}
+closeCameraModal();
+}
+
+function closeCameraModal(){
+if(cameraStream){
+cameraStream.getTracks().forEach(function(track){track.stop()});
+cameraStream=null;
+}
+document.getElementById('cameraModal').style.display='none';
+}
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer>
 function toggleMode(){
@@ -94,6 +214,66 @@ var btn=document.getElementById('modeToggle');
 if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
 }
 }catch(e){}
+
+
+var cameraStream=null;
+var cameraSIdx=-1;
+var cameraIIdx=-1;
+
+function openCamera(sIdx,iIdx){
+cameraSIdx=sIdx;
+cameraIIdx=iIdx;
+// Try getUserMedia first (works on Windows tablets)
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+.then(function(stream){
+cameraStream=stream;
+var video=document.getElementById('cameraVideo');
+video.srcObject=stream;
+document.getElementById('cameraModal').style.display='flex';
+})
+.catch(function(err){
+// Camera access denied or not available — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+});
+}else{
+// No getUserMedia support — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+}
+}
+
+function capturePhoto(){
+var video=document.getElementById('cameraVideo');
+var canvas=document.getElementById('cameraCanvas');
+var maxW=800;
+var w=video.videoWidth;
+var h=video.videoHeight;
+if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+canvas.width=w;
+canvas.height=h;
+var ctx=canvas.getContext('2d');
+ctx.drawImage(video,0,0,w,h);
+var compressed=canvas.toDataURL('image/jpeg',0.8);
+var key=cameraSIdx+'-'+cameraIIdx;
+if(!photoStore[key])photoStore[key]=[];
+if(photoStore[key].length<3){
+photoStore[key].push(compressed);
+roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
+renderWalkthrough();
+syncToFirebase();
+}
+closeCameraModal();
+}
+
+function closeCameraModal(){
+if(cameraStream){
+cameraStream.getTracks().forEach(function(track){track.stop()});
+cameraStream=null;
+}
+document.getElementById('cameraModal').style.display='none';
+}
 
 </script>
 <style>
@@ -574,7 +754,7 @@ function renderWalkthrough(){
         var photoKey=currentSection+'-'+idx;
         var photos=photoStore[photoKey]||[];
         if(photos.length<3){
-          html+='<label class="photo-btn" for="fileInput-'+currentSection+'-'+idx+'">📷 Photo</label>';
+          html+='<button class="photo-btn" onclick="openCamera('+currentSection+','+idx+')">📷 Photo</button>';
           html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="environment" style="position:absolute;left:-9999px;opacity:0;" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
         }
         photos.forEach(function(p,pi){
@@ -1081,7 +1261,16 @@ function generateExcel(){
   html+='<tr><td class="summary-header" colspan="4">SUMMARY</td></tr>';
   html+='<tr><td class="summary">Total Checks</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+' ('+pct+'%)</td></tr>';
   html+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td class="summary"></td><td class="summary"></td></tr>';
-  html+='</table></body></html>';
+  html+='</table><!-- Camera Modal -->
+<div id="cameraModal" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+<video id="cameraVideo" autoplay playsinline style="max-width:100%;max-height:75vh;border-radius:8px;"></video>
+<div style="display:flex;gap:16px;margin-top:16px;">
+<button onclick="capturePhoto()" style="padding:16px 40px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:24px;font-weight:700;cursor:pointer;width:72px;height:72px;">📷</button>
+<button onclick="closeCameraModal()" style="padding:16px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer;">✕ Cancel</button>
+</div>
+<canvas id="cameraCanvas" style="display:none;"></canvas>
+</div>
+</body></html>';
   return html;
 }
 
@@ -1137,6 +1326,75 @@ if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.st
 }
 }catch(e){}
 
+
+var cameraStream=null;
+var cameraSIdx=-1;
+var cameraIIdx=-1;
+
+function openCamera(sIdx,iIdx){
+cameraSIdx=sIdx;
+cameraIIdx=iIdx;
+// Try getUserMedia first (works on Windows tablets)
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+.then(function(stream){
+cameraStream=stream;
+var video=document.getElementById('cameraVideo');
+video.srcObject=stream;
+document.getElementById('cameraModal').style.display='flex';
+})
+.catch(function(err){
+// Camera access denied or not available — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+});
+}else{
+// No getUserMedia support — fall back to file input
+var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+if(inp)inp.click();
+}
+}
+
+function capturePhoto(){
+var video=document.getElementById('cameraVideo');
+var canvas=document.getElementById('cameraCanvas');
+var maxW=800;
+var w=video.videoWidth;
+var h=video.videoHeight;
+if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+canvas.width=w;
+canvas.height=h;
+var ctx=canvas.getContext('2d');
+ctx.drawImage(video,0,0,w,h);
+var compressed=canvas.toDataURL('image/jpeg',0.8);
+var key=cameraSIdx+'-'+cameraIIdx;
+if(!photoStore[key])photoStore[key]=[];
+if(photoStore[key].length<3){
+photoStore[key].push(compressed);
+roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
+renderWalkthrough();
+syncToFirebase();
+}
+closeCameraModal();
+}
+
+function closeCameraModal(){
+if(cameraStream){
+cameraStream.getTracks().forEach(function(track){track.stop()});
+cameraStream=null;
+}
+document.getElementById('cameraModal').style.display='none';
+}
+
 </script>
+<!-- Camera Modal -->
+<div id="cameraModal" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+<video id="cameraVideo" autoplay playsinline style="max-width:100%;max-height:75vh;border-radius:8px;"></video>
+<div style="display:flex;gap:16px;margin-top:16px;">
+<button onclick="capturePhoto()" style="padding:16px 40px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:24px;font-weight:700;cursor:pointer;width:72px;height:72px;">📷</button>
+<button onclick="closeCameraModal()" style="padding:16px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer;">✕ Cancel</button>
+</div>
+<canvas id="cameraCanvas" style="display:none;"></canvas>
+</div>
 </body>
 </html>
