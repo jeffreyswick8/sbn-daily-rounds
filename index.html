@@ -951,6 +951,17 @@ function showSummary() {
 /* ===== SUBMIT ===== */
 function submitRounds() {
   try {
+  // Debug: check data integrity
+  for (var di = 0; di < roundData.sections.length; di++) {
+    var ds = roundData.sections[di];
+    if (!ds) { alert('ERROR: Section ' + di + ' is undefined'); return; }
+    if (!ds.name) { alert('ERROR: Section ' + di + ' has no name. Keys: ' + Object.keys(ds).join(',')); return; }
+    for (var dj = 0; dj < ds.items.length; dj++) {
+      var dit = ds.items[dj];
+      if (!dit) { alert('ERROR: Section ' + di + ' (' + ds.name + ') item ' + dj + ' is undefined'); return; }
+      if (!dit.name && dit.name !== '') { alert('ERROR: Section ' + di + ' (' + ds.name + ') item ' + dj + ' has no name. Keys: ' + Object.keys(dit).join(',')); return; }
+    }
+  }
   roundData.endTime = Date.now();
   roundData.status = 'completed';
   roundData.lastModified = Date.now();
