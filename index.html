@@ -575,7 +575,7 @@ function renderWalkthrough(){
         var photos=photoStore[photoKey]||[];
         if(photos.length<3){
           html+='<label class="photo-btn" for="fileInput-'+currentSection+'-'+idx+'">📷 Photo</label>';
-          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="camera" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
+          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="environment" style="position:absolute;left:-9999px;opacity:0;" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
         }
         photos.forEach(function(p,pi){
           html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+p+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">✕</button></div>';
