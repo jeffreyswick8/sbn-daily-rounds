@@ -997,24 +997,7 @@ function generateExcel(){
   html+='<tr><td class="summary-header" colspan="4">SUMMARY</td></tr>';
   html+='<tr><td class="summary">Total Checks</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+' ('+pct+'%)</td></tr>';
   html+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td class="summary"></td><td class="summary"></td></tr>';
-  html+='</table><!-- Camera Modal -->
-<div id="cameraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px;">
-<div style="position:relative;max-width:100%;max-height:70vh;">
-<video id="cameraVideo" autoplay playsinline muted style="max-width:100%;max-height:70vh;border-radius:12px;background:#000;"></video>
-</div>
-<div style="display:flex;gap:20px;margin-top:20px;align-items:center;">
-<button onclick="capturePhoto()" style="width:72px;height:72px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:28px;cursor:pointer;box-shadow:0 4px 12px rgba(255,153,0,0.4);">📷</button>
-<button onclick="closeCameraModal()" style="padding:14px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;">✕ Cancel</button>
-</div>
-<canvas id="cameraCanvas" style="display:none;"></canvas>
-</div>
-
-<!-- Photo Preview Modal -->
-<div id="photoPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9998;align-items:center;justify-content:center;padding:20px;flex-direction:column;">
-<img id="photoPreviewImg" style="max-width:90%;max-height:80vh;border-radius:8px;">
-<button onclick="document.getElementById('photoPreviewModal').style.display='none'" style="margin-top:16px;padding:12px 24px;background:#ff9900;color:#232f3e;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Close</button>
-</div>
-</body></html>';
+  html+='</table></body></html>';
   return html;
 }
 
