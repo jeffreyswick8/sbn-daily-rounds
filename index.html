@@ -968,8 +968,9 @@ function submitRounds() {
     keys.forEach(function(key) {
       photoStore[key].forEach(function(dataUrl, pi) {
         var parts = key.split('-');
-        var secName = sections[parseInt(parts[0])].name.replace(/[^a-zA-Z0-9]/g,'_').substring(0,15);
-        var itemName = sections[parseInt(parts[0])].cols[parseInt(parts[1])] || 'item';
+        var secObj = sections[parseInt(parts[0])];
+        var secName = secObj ? secObj.name.replace(/[^a-zA-Z0-9]/g,'_').substring(0,15) : 'Section';
+        var itemName = (secObj && secObj.cols[parseInt(parts[1])]) ? secObj.cols[parseInt(parts[1])].replace(/[^a-zA-Z0-9]/g,'_').substring(0,15) : 'item';
         itemName = itemName.replace(/[^a-zA-Z0-9]/g,'_').substring(0,15);
         var b64 = dataUrl.split(',')[1];
         folder.file(secName + '_' + itemName + '_' + (pi+1) + '.jpg', b64, {base64: true});
@@ -1018,6 +1019,7 @@ function afterSubmit(baseName) {
   var totalItems = 0, okCount = 0, issueCount = 0;
   roundData.sections.forEach(function(sec) {
     sec.items.forEach(function(item) {
+      if (!item) return;
       totalItems++;
       if (item.status === 'ok' || item.status === 'expected') okCount++;
       if (item.status === 'issue' || item.status === 'unexpected') issueCount++;
@@ -1032,8 +1034,8 @@ function afterSubmit(baseName) {
     body += 'ISSUES:\n';
     roundData.sections.forEach(function(sec) {
       sec.items.forEach(function(item) {
-        if (item.status === 'issue' || item.status === 'unexpected') {
-          body += '- ' + sec.name + ' > ' + item.name + ': ' + (item.note || '') + '\n';
+        if (item && (item.status === 'issue' || item.status === 'unexpected')) {
+          body += '- ' + sec.name + ' > ' + (item.name || 'Unknown') + ': ' + (item.note || '') + '\n';
         }
       });
     });
@@ -1075,10 +1077,11 @@ function generateExcel() {
     h += '<tr><td class="section-title" colspan="4">' + sec.name + '</td></tr>';
     if (sec.completedBy) h += '<tr><td colspan="4" style="font-size:10px;color:#166534;background:#f0fdf4;font-style:italic">Completed by ' + sec.completedBy + '</td></tr>';
     sec.items.forEach(function(item) {
+      if (!item) return;
       var cls = '';
       if (item.status === 'ok' || item.status === 'expected') cls = 'ok';
       else if (item.status === 'issue' || item.status === 'unexpected') cls = 'issue';
-      h += '<tr><td>' + item.name + '</td><td class="' + cls + '">' + (item.status || '-') + '</td>';
+      h += '<tr><td>' + (item.name || '-') + '</td><td class="' + cls + '">' + (item.status || '-') + '</td>';
       h += '<td class="' + (item.note ? 'note-cell' : '') + '">' + (item.note || '') + '</td>';
       h += '<td>' + (item.photos > 0 ? item.photos + ' photo(s)' : '') + '</td></tr>';
     });
@@ -1088,6 +1091,7 @@ function generateExcel() {
   var totalItems = 0, okCount = 0, issueCount = 0;
   roundData.sections.forEach(function(sec) {
     sec.items.forEach(function(item) {
+      if (!item) return;
       totalItems++;
       if (item.status === 'ok' || item.status === 'expected') okCount++;
       if (item.status === 'issue' || item.status === 'unexpected') issueCount++;
