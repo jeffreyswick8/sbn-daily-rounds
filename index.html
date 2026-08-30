@@ -9,273 +9,9 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>SBN Daily Rounds</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer>
-function toggleMode(){
-var btn=document.getElementById('modeToggle');
-if(document.body.classList.contains('light-mode')){
-document.body.classList.remove('light-mode');
-btn.innerHTML='☀️ Light';
-btn.style.background='rgba(255,255,255,0.15)';
-btn.style.color='white';
-btn.style.borderColor='rgba(255,255,255,0.3)';
-try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
-}else{
-document.body.classList.add('light-mode');
-btn.innerHTML='🌙 Dark';
-btn.style.background='rgba(0,0,0,0.08)';
-btn.style.color='#1a1a1a';
-btn.style.borderColor='rgba(0,0,0,0.15)';
-try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
-}
-}
-// Load saved theme preference
-try{
-if(localStorage.getItem('sbn-rounds-theme')==='light'){
-document.body.classList.add('light-mode');
-var btn=document.getElementById('modeToggle');
-if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
-}
-}catch(e){}
-
-
-var cameraStream=null;
-var cameraSIdx=-1;
-var cameraIIdx=-1;
-
-function openCamera(sIdx,iIdx){
-cameraSIdx=sIdx;
-cameraIIdx=iIdx;
-// Try getUserMedia first (works on Windows tablets)
-if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-.then(function(stream){
-cameraStream=stream;
-var video=document.getElementById('cameraVideo');
-video.srcObject=stream;
-document.getElementById('cameraModal').style.display='flex';
-})
-.catch(function(err){
-// Camera access denied or not available — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-});
-}else{
-// No getUserMedia support — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-}
-}
-
-function capturePhoto(){
-var video=document.getElementById('cameraVideo');
-var canvas=document.getElementById('cameraCanvas');
-var maxW=800;
-var w=video.videoWidth;
-var h=video.videoHeight;
-if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
-canvas.width=w;
-canvas.height=h;
-var ctx=canvas.getContext('2d');
-ctx.drawImage(video,0,0,w,h);
-var compressed=canvas.toDataURL('image/jpeg',0.8);
-var key=cameraSIdx+'-'+cameraIIdx;
-if(!photoStore[key])photoStore[key]=[];
-if(photoStore[key].length<3){
-photoStore[key].push(compressed);
-roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
-renderWalkthrough();
-syncToFirebase();
-}
-closeCameraModal();
-}
-
-function closeCameraModal(){
-if(cameraStream){
-cameraStream.getTracks().forEach(function(track){track.stop()});
-cameraStream=null;
-}
-document.getElementById('cameraModal').style.display='none';
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer>
-function toggleMode(){
-var btn=document.getElementById('modeToggle');
-if(document.body.classList.contains('light-mode')){
-document.body.classList.remove('light-mode');
-btn.innerHTML='☀️ Light';
-btn.style.background='rgba(255,255,255,0.15)';
-btn.style.color='white';
-btn.style.borderColor='rgba(255,255,255,0.3)';
-try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
-}else{
-document.body.classList.add('light-mode');
-btn.innerHTML='🌙 Dark';
-btn.style.background='rgba(0,0,0,0.08)';
-btn.style.color='#1a1a1a';
-btn.style.borderColor='rgba(0,0,0,0.15)';
-try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
-}
-}
-// Load saved theme preference
-try{
-if(localStorage.getItem('sbn-rounds-theme')==='light'){
-document.body.classList.add('light-mode');
-var btn=document.getElementById('modeToggle');
-if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
-}
-}catch(e){}
-
-
-var cameraStream=null;
-var cameraSIdx=-1;
-var cameraIIdx=-1;
-
-function openCamera(sIdx,iIdx){
-cameraSIdx=sIdx;
-cameraIIdx=iIdx;
-// Try getUserMedia first (works on Windows tablets)
-if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-.then(function(stream){
-cameraStream=stream;
-var video=document.getElementById('cameraVideo');
-video.srcObject=stream;
-document.getElementById('cameraModal').style.display='flex';
-})
-.catch(function(err){
-// Camera access denied or not available — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-});
-}else{
-// No getUserMedia support — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-}
-}
-
-function capturePhoto(){
-var video=document.getElementById('cameraVideo');
-var canvas=document.getElementById('cameraCanvas');
-var maxW=800;
-var w=video.videoWidth;
-var h=video.videoHeight;
-if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
-canvas.width=w;
-canvas.height=h;
-var ctx=canvas.getContext('2d');
-ctx.drawImage(video,0,0,w,h);
-var compressed=canvas.toDataURL('image/jpeg',0.8);
-var key=cameraSIdx+'-'+cameraIIdx;
-if(!photoStore[key])photoStore[key]=[];
-if(photoStore[key].length<3){
-photoStore[key].push(compressed);
-roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
-renderWalkthrough();
-syncToFirebase();
-}
-closeCameraModal();
-}
-
-function closeCameraModal(){
-if(cameraStream){
-cameraStream.getTracks().forEach(function(track){track.stop()});
-cameraStream=null;
-}
-document.getElementById('cameraModal').style.display='none';
-}
-
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer>
-function toggleMode(){
-var btn=document.getElementById('modeToggle');
-if(document.body.classList.contains('light-mode')){
-document.body.classList.remove('light-mode');
-btn.innerHTML='☀️ Light';
-btn.style.background='rgba(255,255,255,0.15)';
-btn.style.color='white';
-btn.style.borderColor='rgba(255,255,255,0.3)';
-try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
-}else{
-document.body.classList.add('light-mode');
-btn.innerHTML='🌙 Dark';
-btn.style.background='rgba(0,0,0,0.08)';
-btn.style.color='#1a1a1a';
-btn.style.borderColor='rgba(0,0,0,0.15)';
-try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
-}
-}
-// Load saved theme preference
-try{
-if(localStorage.getItem('sbn-rounds-theme')==='light'){
-document.body.classList.add('light-mode');
-var btn=document.getElementById('modeToggle');
-if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
-}
-}catch(e){}
-
-
-var cameraStream=null;
-var cameraSIdx=-1;
-var cameraIIdx=-1;
-
-function openCamera(sIdx,iIdx){
-cameraSIdx=sIdx;
-cameraIIdx=iIdx;
-// Try getUserMedia first (works on Windows tablets)
-if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-.then(function(stream){
-cameraStream=stream;
-var video=document.getElementById('cameraVideo');
-video.srcObject=stream;
-document.getElementById('cameraModal').style.display='flex';
-})
-.catch(function(err){
-// Camera access denied or not available — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-});
-}else{
-// No getUserMedia support — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-}
-}
-
-function capturePhoto(){
-var video=document.getElementById('cameraVideo');
-var canvas=document.getElementById('cameraCanvas');
-var maxW=800;
-var w=video.videoWidth;
-var h=video.videoHeight;
-if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
-canvas.width=w;
-canvas.height=h;
-var ctx=canvas.getContext('2d');
-ctx.drawImage(video,0,0,w,h);
-var compressed=canvas.toDataURL('image/jpeg',0.8);
-var key=cameraSIdx+'-'+cameraIIdx;
-if(!photoStore[key])photoStore[key]=[];
-if(photoStore[key].length<3){
-photoStore[key].push(compressed);
-roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
-renderWalkthrough();
-syncToFirebase();
-}
-closeCameraModal();
-}
-
-function closeCameraModal(){
-if(cameraStream){
-cameraStream.getTracks().forEach(function(track){track.stop()});
-cameraStream=null;
-}
-document.getElementById('cameraModal').style.display='none';
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#1a2332;--surface:#232f3e;--card:#2d3a4a;--accent:#ff9900;--accent-dark:#cc7a00;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#94a3b8;--border:#374151;--radius:12px}
@@ -460,6 +196,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 <div class="active-rounds" id="activeRounds" style="display:none">
 <h3>🔄 Active Rounds</h3>
 <div id="activeRoundsList"></div>
+</div>
+
+<div id="recentRounds" style="display:none;margin-top:16px;">
+<h3 style="color:var(--accent);font-size:16px;margin-bottom:10px;">📋 Recent Rounds</h3>
+<div id="recentRoundsList"></div>
 </div>
 </div>
 </div>
@@ -1023,11 +764,6 @@ function removePhoto(key,idx){
   }
 }
 
-function previewPhoto(key,idx){
-  var img=document.getElementById('photoModalImg');
-  img.src=photoStore[key][idx];
-  document.getElementById('photoModal').classList.add('active');
-}
 
 function closePhotoModal(){
   document.getElementById('photoModal').classList.remove('active');
@@ -1262,13 +998,21 @@ function generateExcel(){
   html+='<tr><td class="summary">Total Checks</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+' ('+pct+'%)</td></tr>';
   html+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td class="summary"></td><td class="summary"></td></tr>';
   html+='</table><!-- Camera Modal -->
-<div id="cameraModal" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-<video id="cameraVideo" autoplay playsinline style="max-width:100%;max-height:75vh;border-radius:8px;"></video>
-<div style="display:flex;gap:16px;margin-top:16px;">
-<button onclick="capturePhoto()" style="padding:16px 40px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:24px;font-weight:700;cursor:pointer;width:72px;height:72px;">📷</button>
-<button onclick="closeCameraModal()" style="padding:16px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer;">✕ Cancel</button>
+<div id="cameraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px;">
+<div style="position:relative;max-width:100%;max-height:70vh;">
+<video id="cameraVideo" autoplay playsinline muted style="max-width:100%;max-height:70vh;border-radius:12px;background:#000;"></video>
+</div>
+<div style="display:flex;gap:20px;margin-top:20px;align-items:center;">
+<button onclick="capturePhoto()" style="width:72px;height:72px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:28px;cursor:pointer;box-shadow:0 4px 12px rgba(255,153,0,0.4);">📷</button>
+<button onclick="closeCameraModal()" style="padding:14px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;">✕ Cancel</button>
 </div>
 <canvas id="cameraCanvas" style="display:none;"></canvas>
+</div>
+
+<!-- Photo Preview Modal -->
+<div id="photoPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9998;align-items:center;justify-content:center;padding:20px;flex-direction:column;">
+<img id="photoPreviewImg" style="max-width:90%;max-height:80vh;border-radius:8px;">
+<button onclick="document.getElementById('photoPreviewModal').style.display='none'" style="margin-top:16px;padding:12px 24px;background:#ff9900;color:#232f3e;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Close</button>
 </div>
 </body></html>';
   return html;
@@ -1292,6 +1036,7 @@ function waitForFirebase(){
   if(typeof firebase!=='undefined'&&firebase.initializeApp){
     initFirebase();
     loadActiveRounds();
+    loadRecentRounds();
   }else{
     setTimeout(waitForFirebase,100);
   }
@@ -1299,102 +1044,236 @@ function waitForFirebase(){
 waitForFirebase();
 initStartScreen();
 
+/* ===== DARK/LIGHT MODE TOGGLE ===== */
 function toggleMode(){
-var btn=document.getElementById('modeToggle');
-if(document.body.classList.contains('light-mode')){
-document.body.classList.remove('light-mode');
-btn.innerHTML='☀️ Light';
-btn.style.background='rgba(255,255,255,0.15)';
-btn.style.color='white';
-btn.style.borderColor='rgba(255,255,255,0.3)';
-try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
-}else{
-document.body.classList.add('light-mode');
-btn.innerHTML='🌙 Dark';
-btn.style.background='rgba(0,0,0,0.08)';
-btn.style.color='#1a1a1a';
-btn.style.borderColor='rgba(0,0,0,0.15)';
-try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+  var btn=document.getElementById('modeToggle');
+  if(document.body.classList.contains('light-mode')){
+    document.body.classList.remove('light-mode');
+    btn.innerHTML='☀️ Light';
+    btn.style.background='rgba(255,255,255,0.15)';
+    btn.style.color='white';
+    btn.style.borderColor='rgba(255,255,255,0.3)';
+    try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
+  }else{
+    document.body.classList.add('light-mode');
+    btn.innerHTML='🌙 Dark';
+    btn.style.background='rgba(0,0,0,0.08)';
+    btn.style.color='#1a1a1a';
+    btn.style.borderColor='rgba(0,0,0,0.15)';
+    try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+  }
 }
-}
-// Load saved theme preference
 try{
-if(localStorage.getItem('sbn-rounds-theme')==='light'){
-document.body.classList.add('light-mode');
-var btn=document.getElementById('modeToggle');
-if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
-}
+  if(localStorage.getItem('sbn-rounds-theme')==='light'){
+    document.body.classList.add('light-mode');
+    var mBtn=document.getElementById('modeToggle');
+    if(mBtn){mBtn.innerHTML='🌙 Dark';mBtn.style.background='rgba(0,0,0,0.08)';mBtn.style.color='#1a1a1a';mBtn.style.borderColor='rgba(0,0,0,0.15)';}
+  }
 }catch(e){}
 
-
+/* ===== CAMERA FOR WINDOWS TABLETS ===== */
 var cameraStream=null;
 var cameraSIdx=-1;
 var cameraIIdx=-1;
 
 function openCamera(sIdx,iIdx){
-cameraSIdx=sIdx;
-cameraIIdx=iIdx;
-// Try getUserMedia first (works on Windows tablets)
-if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-.then(function(stream){
-cameraStream=stream;
-var video=document.getElementById('cameraVideo');
-video.srcObject=stream;
-document.getElementById('cameraModal').style.display='flex';
-})
-.catch(function(err){
-// Camera access denied or not available — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-});
-}else{
-// No getUserMedia support — fall back to file input
-var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
-if(inp)inp.click();
-}
+  cameraSIdx=sIdx;
+  cameraIIdx=iIdx;
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    var constraints={video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}};
+    navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(stream){
+      cameraStream=stream;
+      var video=document.getElementById('cameraVideo');
+      video.srcObject=stream;
+      video.onloadedmetadata=function(){
+        video.play();
+        document.getElementById('cameraModal').style.display='flex';
+      };
+    })
+    .catch(function(err){
+      console.log('Camera error:',err);
+      alert('Camera access denied or unavailable. Opening file picker instead.');
+      var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+      if(inp)inp.click();
+    });
+  }else{
+    var inp=document.getElementById('fileInput-'+sIdx+'-'+iIdx);
+    if(inp)inp.click();
+  }
 }
 
 function capturePhoto(){
-var video=document.getElementById('cameraVideo');
-var canvas=document.getElementById('cameraCanvas');
-var maxW=800;
-var w=video.videoWidth;
-var h=video.videoHeight;
-if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
-canvas.width=w;
-canvas.height=h;
-var ctx=canvas.getContext('2d');
-ctx.drawImage(video,0,0,w,h);
-var compressed=canvas.toDataURL('image/jpeg',0.8);
-var key=cameraSIdx+'-'+cameraIIdx;
-if(!photoStore[key])photoStore[key]=[];
-if(photoStore[key].length<3){
-photoStore[key].push(compressed);
-roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
-renderWalkthrough();
-syncToFirebase();
-}
-closeCameraModal();
+  var video=document.getElementById('cameraVideo');
+  var canvas=document.getElementById('cameraCanvas');
+  if(!video.videoWidth){alert('Camera not ready yet');return;}
+  var maxW=800;
+  var w=video.videoWidth;
+  var h=video.videoHeight;
+  if(w>maxW){h=Math.round(h*(maxW/w));w=maxW;}
+  canvas.width=w;
+  canvas.height=h;
+  var ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,w,h);
+  var compressed=canvas.toDataURL('image/jpeg',0.8);
+  var key=cameraSIdx+'-'+cameraIIdx;
+  if(!photoStore[key])photoStore[key]=[];
+  if(photoStore[key].length<3){
+    photoStore[key].push(compressed);
+    if(roundData&&roundData.sections&&roundData.sections[cameraSIdx]&&roundData.sections[cameraSIdx].items[cameraIIdx]){
+      roundData.sections[cameraSIdx].items[cameraIIdx].photos=photoStore[key].length;
+    }
+    renderWalkthrough();
+    syncToFirebase();
+  }
+  closeCameraModal();
 }
 
 function closeCameraModal(){
-if(cameraStream){
-cameraStream.getTracks().forEach(function(track){track.stop()});
-cameraStream=null;
+  if(cameraStream){
+    cameraStream.getTracks().forEach(function(track){track.stop();});
+    cameraStream=null;
+  }
+  var video=document.getElementById('cameraVideo');
+  if(video)video.srcObject=null;
+  document.getElementById('cameraModal').style.display='none';
 }
-document.getElementById('cameraModal').style.display='none';
+
+function previewPhoto(key,idx){
+  var photos=photoStore[key];
+  if(photos&&photos[idx]){
+    document.getElementById('photoPreviewImg').src=photos[idx];
+    document.getElementById('photoPreviewModal').style.display='flex';
+  }
+}
+
+/* ===== EDIT/DELETE ACTIVE ROUNDS ===== */
+var editingRoundKey=null;
+
+function loadRecentRounds(){
+  try{
+    var recentDiv=document.getElementById('recentRounds');
+    if(!recentDiv)return;
+    var building=document.getElementById('buildingGrid')?null:null;
+    // Listen for all rounds across buildings for last 7 days
+    var today=new Date();
+    var dates=[];
+    for(var d=0;d<7;d++){
+      var dt=new Date(today);
+      dt.setDate(dt.getDate()-d);
+      dates.push(dt.getFullYear()+'-'+(dt.getMonth()+1<10?'0':'')+( dt.getMonth()+1)+'-'+(dt.getDate()<10?'0':'')+dt.getDate());
+    }
+    var allRounds=[];
+    var loaded=0;
+    dates.forEach(function(dateStr){
+      var buildings=['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
+      buildings.forEach(function(bldg){
+        try{
+          db.ref('rounds/'+bldg+'/'+dateStr).once('value',function(snap){
+            loaded++;
+            var data=snap.val();
+            if(data){
+              Object.keys(data).forEach(function(roundId){
+                var r=data[roundId];
+                r._key='rounds/'+bldg+'/'+dateStr+'/'+roundId;
+                r._roundId=roundId;
+                allRounds.push(r);
+              });
+            }
+            if(loaded>=dates.length*buildings.length){
+              renderRecentRounds(allRounds);
+            }
+          });
+        }catch(e){loaded++;}
+      });
+    });
+  }catch(e){}
+}
+
+function renderRecentRounds(rounds){
+  var div=document.getElementById('recentRoundsList');
+  if(!div)return;
+  var container=document.getElementById('recentRounds');
+  if(rounds.length===0){
+    container.style.display='none';
+    return;
+  }
+  container.style.display='block';
+  rounds.sort(function(a,b){return(b.startTime||0)-(a.startTime||0)});
+  var html='';
+  rounds.forEach(function(r){
+    var statusColor=r.status==='completed'?'var(--green)':'var(--accent)';
+    var statusText=r.status==='completed'?'✅ Completed':'🔄 In Progress';
+    var issues=0;
+    if(r.sections){
+      r.sections.forEach(function(s){
+        if(s.items){s.items.forEach(function(it){if(it.status==='issue'||it.status==='unexpected')issues++;});}
+      });
+    }
+    html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    html+='<span style="font-weight:700;color:var(--accent);">'+escHtml(r.building||'')+'</span>';
+    html+='<span style="font-size:11px;color:'+statusColor+';font-weight:600;">'+statusText+'</span>';
+    html+='</div>';
+    html+='<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'+escHtml(r.date||'')+' • '+escHtml(r.technician||'')+' • '+escHtml(r.shift||'');
+    if(issues>0)html+=' • <span style="color:var(--red);font-weight:600;">'+issues+' issue'+(issues>1?'s':'')+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px;">';
+    html+='<button onclick="editRound(''+r._key+'')" style="flex:1;padding:10px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;">✏️ Edit</button>';
+    html+='<button onclick="deleteRound(''+r._key+'')" style="flex:1;padding:10px;background:var(--surface);border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;">🗑️ Delete</button>';
+    html+='</div></div>';
+  });
+  div.innerHTML=html;
+}
+
+function editRound(key){
+  editingRoundKey=key;
+  try{
+    db.ref(key).once('value',function(snap){
+      var data=snap.val();
+      if(!data){alert('Round not found.');return;}
+      // Load the round data into the walkthrough
+      roundData=data;
+      roundData._firebaseKey=key;
+      // Restore section data
+      currentSection=0;
+      photoStore={};
+      // Show walkthrough screen
+      showScreen('walkScreen');
+      document.getElementById('headerSub').textContent='Editing: '+data.building+' - '+data.date;
+      renderWalkthrough();
+      showToast('Editing round for '+data.building+' ('+data.date+')');
+    });
+  }catch(e){alert('Error loading round: '+e.message);}
+}
+
+function deleteRound(key){
+  if(!confirm('Delete this round? This cannot be undone.'))return;
+  try{
+    db.ref(key).remove(function(err){
+      if(err){alert('Error deleting: '+err.message);}
+      else{showToast('Round deleted');loadRecentRounds();}
+    });
+  }catch(e){alert('Error: '+e.message);}
 }
 
 </script>
 <!-- Camera Modal -->
-<div id="cameraModal" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-<video id="cameraVideo" autoplay playsinline style="max-width:100%;max-height:75vh;border-radius:8px;"></video>
-<div style="display:flex;gap:16px;margin-top:16px;">
-<button onclick="capturePhoto()" style="padding:16px 40px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:24px;font-weight:700;cursor:pointer;width:72px;height:72px;">📷</button>
-<button onclick="closeCameraModal()" style="padding:16px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;cursor:pointer;">✕ Cancel</button>
+<div id="cameraModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px;">
+<div style="position:relative;max-width:100%;max-height:70vh;">
+<video id="cameraVideo" autoplay playsinline muted style="max-width:100%;max-height:70vh;border-radius:12px;background:#000;"></video>
+</div>
+<div style="display:flex;gap:20px;margin-top:20px;align-items:center;">
+<button onclick="capturePhoto()" style="width:72px;height:72px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:28px;cursor:pointer;box-shadow:0 4px 12px rgba(255,153,0,0.4);">📷</button>
+<button onclick="closeCameraModal()" style="padding:14px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;">✕ Cancel</button>
 </div>
 <canvas id="cameraCanvas" style="display:none;"></canvas>
+</div>
+
+<!-- Photo Preview Modal -->
+<div id="photoPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9998;align-items:center;justify-content:center;padding:20px;flex-direction:column;">
+<img id="photoPreviewImg" style="max-width:90%;max-height:80vh;border-radius:8px;">
+<button onclick="document.getElementById('photoPreviewModal').style.display='none'" style="margin-top:16px;padding:12px 24px;background:#ff9900;color:#232f3e;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Close</button>
 </div>
 </body>
 </html>
