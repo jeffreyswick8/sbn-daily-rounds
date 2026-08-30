@@ -14,33 +14,55 @@
 var cameraStream = null;
 var camSIdx = -1;
 var camIIdx = -1;
+var camFacing = 'environment'; // Default to back camera
+
+function startCameraStream() {
+  // Stop any existing stream first
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  return navigator.mediaDevices.getUserMedia({
+    video: { facingMode: {exact: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+  }).catch(function() {
+    // exact facingMode failed — try ideal (some devices don't support exact)
+    return navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+    });
+  }).then(function(stream) {
+    cameraStream = stream;
+    var video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    video.onloadedmetadata = function() { video.play(); };
+    return stream;
+  });
+}
 
 function openCamera(sIdx, iIdx) {
   camSIdx = sIdx;
   camIIdx = iIdx;
-  // Try getUserMedia (works on Windows tablets with Chrome)
+  camFacing = 'environment'; // Always start with back camera
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
-    }).then(function(stream) {
-      cameraStream = stream;
-      var video = document.getElementById('cameraVideo');
-      video.srcObject = stream;
-      video.onloadedmetadata = function() {
-        video.play();
-      };
-      var modal = document.getElementById('cameraModal');
-      modal.style.display = 'flex';
+    startCameraStream().then(function() {
+      document.getElementById('cameraModal').style.display = 'flex';
     }).catch(function(err) {
       // Camera denied or not available — fall back to file picker
       var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
       if (inp) inp.click();
     });
   } else {
-    // No getUserMedia — fall back to file picker
     var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
     if (inp) inp.click();
   }
+}
+
+function flipCamera() {
+  camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+  startCameraStream().catch(function() {
+    // If flip fails, revert
+    camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+    startCameraStream();
+  });
 }
 
 function capturePhoto() {
@@ -79,6 +101,7 @@ function closeCameraModal() {
 // Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
 document.getElementById('btnCapture').addEventListener('click', capturePhoto);
 document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+document.getElementById('btnFlipCam').addEventListener('click', flipCamera);
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer>
@@ -86,33 +109,55 @@ document.getElementById('btnCamCancel').addEventListener('click', closeCameraMod
 var cameraStream = null;
 var camSIdx = -1;
 var camIIdx = -1;
+var camFacing = 'environment'; // Default to back camera
+
+function startCameraStream() {
+  // Stop any existing stream first
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  return navigator.mediaDevices.getUserMedia({
+    video: { facingMode: {exact: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+  }).catch(function() {
+    // exact facingMode failed — try ideal (some devices don't support exact)
+    return navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+    });
+  }).then(function(stream) {
+    cameraStream = stream;
+    var video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    video.onloadedmetadata = function() { video.play(); };
+    return stream;
+  });
+}
 
 function openCamera(sIdx, iIdx) {
   camSIdx = sIdx;
   camIIdx = iIdx;
-  // Try getUserMedia (works on Windows tablets with Chrome)
+  camFacing = 'environment'; // Always start with back camera
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
-    }).then(function(stream) {
-      cameraStream = stream;
-      var video = document.getElementById('cameraVideo');
-      video.srcObject = stream;
-      video.onloadedmetadata = function() {
-        video.play();
-      };
-      var modal = document.getElementById('cameraModal');
-      modal.style.display = 'flex';
+    startCameraStream().then(function() {
+      document.getElementById('cameraModal').style.display = 'flex';
     }).catch(function(err) {
       // Camera denied or not available — fall back to file picker
       var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
       if (inp) inp.click();
     });
   } else {
-    // No getUserMedia — fall back to file picker
     var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
     if (inp) inp.click();
   }
+}
+
+function flipCamera() {
+  camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+  startCameraStream().catch(function() {
+    // If flip fails, revert
+    camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+    startCameraStream();
+  });
 }
 
 function capturePhoto() {
@@ -151,6 +196,7 @@ function closeCameraModal() {
 // Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
 document.getElementById('btnCapture').addEventListener('click', capturePhoto);
 document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+document.getElementById('btnFlipCam').addEventListener('click', flipCamera);
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer>
@@ -158,33 +204,55 @@ document.getElementById('btnCamCancel').addEventListener('click', closeCameraMod
 var cameraStream = null;
 var camSIdx = -1;
 var camIIdx = -1;
+var camFacing = 'environment'; // Default to back camera
+
+function startCameraStream() {
+  // Stop any existing stream first
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  return navigator.mediaDevices.getUserMedia({
+    video: { facingMode: {exact: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+  }).catch(function() {
+    // exact facingMode failed — try ideal (some devices don't support exact)
+    return navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+    });
+  }).then(function(stream) {
+    cameraStream = stream;
+    var video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    video.onloadedmetadata = function() { video.play(); };
+    return stream;
+  });
+}
 
 function openCamera(sIdx, iIdx) {
   camSIdx = sIdx;
   camIIdx = iIdx;
-  // Try getUserMedia (works on Windows tablets with Chrome)
+  camFacing = 'environment'; // Always start with back camera
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
-    }).then(function(stream) {
-      cameraStream = stream;
-      var video = document.getElementById('cameraVideo');
-      video.srcObject = stream;
-      video.onloadedmetadata = function() {
-        video.play();
-      };
-      var modal = document.getElementById('cameraModal');
-      modal.style.display = 'flex';
+    startCameraStream().then(function() {
+      document.getElementById('cameraModal').style.display = 'flex';
     }).catch(function(err) {
       // Camera denied or not available — fall back to file picker
       var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
       if (inp) inp.click();
     });
   } else {
-    // No getUserMedia — fall back to file picker
     var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
     if (inp) inp.click();
   }
+}
+
+function flipCamera() {
+  camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+  startCameraStream().catch(function() {
+    // If flip fails, revert
+    camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+    startCameraStream();
+  });
 }
 
 function capturePhoto() {
@@ -223,6 +291,7 @@ function closeCameraModal() {
 // Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
 document.getElementById('btnCapture').addEventListener('click', capturePhoto);
 document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+document.getElementById('btnFlipCam').addEventListener('click', flipCamera);
 
 </script>
 <style>
@@ -389,6 +458,7 @@ body.light-mode .btn-allok{background:#dcfce7;color:#166534;border:2px solid #22
 <video id="cameraVideo" autoplay playsinline muted style="max-width:100%;max-height:70vh;border-radius:12px;background:#000;"></video>
 </div>
 <div style="display:flex;gap:20px;margin-top:20px;align-items:center;">
+<button id="btnFlipCam" style="width:52px;height:52px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:50%;font-size:20px;cursor:pointer;">🔄</button>
 <button id="btnCapture" style="width:72px;height:72px;background:#ff9900;color:#232f3e;border:none;border-radius:50%;font-size:28px;cursor:pointer;">&#128247;</button>
 <button id="btnCamCancel" style="padding:14px 24px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;">&#10005; Cancel</button>
 </div>
@@ -1196,33 +1266,55 @@ waitForFirebase();
 var cameraStream = null;
 var camSIdx = -1;
 var camIIdx = -1;
+var camFacing = 'environment'; // Default to back camera
+
+function startCameraStream() {
+  // Stop any existing stream first
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+  return navigator.mediaDevices.getUserMedia({
+    video: { facingMode: {exact: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+  }).catch(function() {
+    // exact facingMode failed — try ideal (some devices don't support exact)
+    return navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal: camFacing}, width: {ideal: 1280}, height: {ideal: 720} }
+    });
+  }).then(function(stream) {
+    cameraStream = stream;
+    var video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    video.onloadedmetadata = function() { video.play(); };
+    return stream;
+  });
+}
 
 function openCamera(sIdx, iIdx) {
   camSIdx = sIdx;
   camIIdx = iIdx;
-  // Try getUserMedia (works on Windows tablets with Chrome)
+  camFacing = 'environment'; // Always start with back camera
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720} }
-    }).then(function(stream) {
-      cameraStream = stream;
-      var video = document.getElementById('cameraVideo');
-      video.srcObject = stream;
-      video.onloadedmetadata = function() {
-        video.play();
-      };
-      var modal = document.getElementById('cameraModal');
-      modal.style.display = 'flex';
+    startCameraStream().then(function() {
+      document.getElementById('cameraModal').style.display = 'flex';
     }).catch(function(err) {
       // Camera denied or not available — fall back to file picker
       var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
       if (inp) inp.click();
     });
   } else {
-    // No getUserMedia — fall back to file picker
     var inp = document.getElementById('fileInp-' + sIdx + '-' + iIdx);
     if (inp) inp.click();
   }
+}
+
+function flipCamera() {
+  camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+  startCameraStream().catch(function() {
+    // If flip fails, revert
+    camFacing = (camFacing === 'environment') ? 'user' : 'environment';
+    startCameraStream();
+  });
 }
 
 function capturePhoto() {
@@ -1261,6 +1353,7 @@ function closeCameraModal() {
 // Wire up camera modal buttons (using addEventListener to avoid inline onclick issues)
 document.getElementById('btnCapture').addEventListener('click', capturePhoto);
 document.getElementById('btnCamCancel').addEventListener('click', closeCameraModal);
+document.getElementById('btnFlipCam').addEventListener('click', flipCamera);
 
 </script>
 </body>
