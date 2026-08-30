@@ -9,12 +9,110 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>SBN Daily Rounds</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer>
+function toggleMode(){
+var btn=document.getElementById('modeToggle');
+if(document.body.classList.contains('light-mode')){
+document.body.classList.remove('light-mode');
+btn.innerHTML='☀️ Light';
+btn.style.background='rgba(255,255,255,0.15)';
+btn.style.color='white';
+btn.style.borderColor='rgba(255,255,255,0.3)';
+try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
+}else{
+document.body.classList.add('light-mode');
+btn.innerHTML='🌙 Dark';
+btn.style.background='rgba(0,0,0,0.08)';
+btn.style.color='#1a1a1a';
+btn.style.borderColor='rgba(0,0,0,0.15)';
+try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+}
+}
+// Load saved theme preference
+try{
+if(localStorage.getItem('sbn-rounds-theme')==='light'){
+document.body.classList.add('light-mode');
+var btn=document.getElementById('modeToggle');
+if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
+}
+}catch(e){}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer>
+function toggleMode(){
+var btn=document.getElementById('modeToggle');
+if(document.body.classList.contains('light-mode')){
+document.body.classList.remove('light-mode');
+btn.innerHTML='☀️ Light';
+btn.style.background='rgba(255,255,255,0.15)';
+btn.style.color='white';
+btn.style.borderColor='rgba(255,255,255,0.3)';
+try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
+}else{
+document.body.classList.add('light-mode');
+btn.innerHTML='🌙 Dark';
+btn.style.background='rgba(0,0,0,0.08)';
+btn.style.color='#1a1a1a';
+btn.style.borderColor='rgba(0,0,0,0.15)';
+try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+}
+}
+// Load saved theme preference
+try{
+if(localStorage.getItem('sbn-rounds-theme')==='light'){
+document.body.classList.add('light-mode');
+var btn=document.getElementById('modeToggle');
+if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
+}
+}catch(e){}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer>
+function toggleMode(){
+var btn=document.getElementById('modeToggle');
+if(document.body.classList.contains('light-mode')){
+document.body.classList.remove('light-mode');
+btn.innerHTML='☀️ Light';
+btn.style.background='rgba(255,255,255,0.15)';
+btn.style.color='white';
+btn.style.borderColor='rgba(255,255,255,0.3)';
+try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
+}else{
+document.body.classList.add('light-mode');
+btn.innerHTML='🌙 Dark';
+btn.style.background='rgba(0,0,0,0.08)';
+btn.style.color='#1a1a1a';
+btn.style.borderColor='rgba(0,0,0,0.15)';
+try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+}
+}
+// Load saved theme preference
+try{
+if(localStorage.getItem('sbn-rounds-theme')==='light'){
+document.body.classList.add('light-mode');
+var btn=document.getElementById('modeToggle');
+if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
+}
+}catch(e){}
+
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#1a2332;--surface:#232f3e;--card:#2d3a4a;--accent:#ff9900;--accent-dark:#cc7a00;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#94a3b8;--border:#374151;--radius:12px}
+body.light-mode{--bg:#f0f2f5;--surface:#ffffff;--card:#e8ecf1;--accent:#ff9900;--accent-dark:#cc7a00;--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#64748b;--border:#d1d5db}
+body.light-mode .header{border-bottom-color:var(--accent)}
+body.light-mode .item-card{box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+body.light-mode .start-label{color:#1a1a1a}
+body.light-mode .warning-banner{background:#fef3c7;color:#92400e;border-color:#f59e0b}
+body.light-mode .btn-primary{color:#1a1a1a}
+body.light-mode input,body.light-mode textarea,body.light-mode select{background:var(--card);color:var(--text);border-color:var(--border)}
+body.light-mode .progress-dot{background:var(--border)}
+body.light-mode .progress-dot.completed{background:var(--green)}
+body.light-mode .progress-dot.active{background:var(--accent)}
+body.light-mode .ok-bg{background:#dcfce7}
+body.light-mode .issue-bg{background:#fef2f2}
+body.light-mode .swipe-ok{background:#dcfce7;color:#166534}
+body.light-mode .swipe-issue{background:#fef2f2;color:#991b1b}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;overflow:hidden;touch-action:pan-y}
 .app{display:flex;flex-direction:column;height:100%;max-width:768px;margin:0 auto}
 
@@ -151,7 +249,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 </head>
 <body>
 <div class="app">
-<div class="header">
+<div class="header" style="position:relative;">
+<button onclick="toggleMode()" id="modeToggle" style="position:absolute;right:12px;top:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;">☀️ Light</button>
 <h1>SBN Daily Rounds</h1>
 <div class="sub" id="headerSub">Select building to begin</div>
 </div>
@@ -1009,6 +1108,34 @@ function waitForFirebase(){
 }
 waitForFirebase();
 initStartScreen();
+
+function toggleMode(){
+var btn=document.getElementById('modeToggle');
+if(document.body.classList.contains('light-mode')){
+document.body.classList.remove('light-mode');
+btn.innerHTML='☀️ Light';
+btn.style.background='rgba(255,255,255,0.15)';
+btn.style.color='white';
+btn.style.borderColor='rgba(255,255,255,0.3)';
+try{localStorage.setItem('sbn-rounds-theme','dark')}catch(e){}
+}else{
+document.body.classList.add('light-mode');
+btn.innerHTML='🌙 Dark';
+btn.style.background='rgba(0,0,0,0.08)';
+btn.style.color='#1a1a1a';
+btn.style.borderColor='rgba(0,0,0,0.15)';
+try{localStorage.setItem('sbn-rounds-theme','light')}catch(e){}
+}
+}
+// Load saved theme preference
+try{
+if(localStorage.getItem('sbn-rounds-theme')==='light'){
+document.body.classList.add('light-mode');
+var btn=document.getElementById('modeToggle');
+if(btn){btn.innerHTML='🌙 Dark';btn.style.background='rgba(0,0,0,0.08)';btn.style.color='#1a1a1a';btn.style.borderColor='rgba(0,0,0,0.15)';}
+}
+}catch(e){}
+
 </script>
 </body>
 </html>
