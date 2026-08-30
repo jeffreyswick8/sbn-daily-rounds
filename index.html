@@ -779,6 +779,7 @@ function markItem(sIdx, iIdx, status) {
   roundData.sections[sIdx].items[iIdx].status = status;
   checkSectionComplete(sIdx);
   renderWalkthrough();
+  setTimeout(function() { updateNavButtons(); }, 100);
 }
 
 function markAllOk() {
@@ -949,6 +950,7 @@ function showSummary() {
 
 /* ===== SUBMIT ===== */
 function submitRounds() {
+  try {
   roundData.endTime = Date.now();
   roundData.status = 'completed';
   roundData.lastModified = Date.now();
@@ -982,6 +984,7 @@ function submitRounds() {
     downloadBlob(blob, baseName + '.xls');
     afterSubmit(baseName);
   }
+  } catch(err) { alert('Submit error: ' + err.message); }
 }
 
 function downloadBlob(blob, filename) {
