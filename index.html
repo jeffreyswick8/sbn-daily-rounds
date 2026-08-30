@@ -575,7 +575,7 @@ function renderWalkthrough(){
         var photos=photoStore[photoKey]||[];
         if(photos.length<3){
           html+='<button class="photo-btn" onclick="triggerPhoto('+currentSection+','+idx+')">📷 Photo</button>';
-          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
+          html+='<input type="file" id="fileInput-'+currentSection+'-'+idx+'" accept="image/*" style="display:none" onchange="handlePhoto(this,'+currentSection+','+idx+')">';
         }
         photos.forEach(function(p,pi){
           html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+p+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">✕</button></div>';
@@ -985,7 +985,7 @@ function openTicketAndEmail(baseName){
   }
   
   // Email
-  var subject=encodeURIComponent(roundData.building+' Daily Rounds - '+roundData.date+' - '+roundData.shift);
+  // subject is now encoded inline in mailto URL
   var totalItems=0,okCount=0,issueCount=0;
   roundData.sections.forEach(function(sec){
     sec.items.forEach(function(item){
@@ -1011,7 +1011,8 @@ function openTicketAndEmail(baseName){
   }
   if(ticketUrl)body+='\nDaily Ticket: '+ticketUrl+'\n';
   body+='\n(Excel file attached separately)';
-  window.open('mailto:SBN207@groups.amazon.com?subject='+subject+'&body='+encodeURIComponent(body),'_blank');
+  var mailtoUrl='mailto:SBN207@groups.amazon.com?subject='+encodeURIComponent(roundData.building+' Daily Rounds - '+roundData.date+' - '+roundData.shift)+'&body='+encodeURIComponent(body);
+try{window.location.href=mailtoUrl}catch(e){window.open(mailtoUrl,'_blank')}
 }
 
 function generateExcel(){
