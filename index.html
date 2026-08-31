@@ -64,7 +64,7 @@ body.light-mode .warning-banner{background:#fef3c7;color:#92400e}
 .heatmap-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:6px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border)}
 .heatmap-toggle.active{color:var(--accent);border-color:var(--accent)}
 .floor-wrap{padding:4px 8px;overflow:auto}
-.floor-grid{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:auto;gap:3px;min-height:280px}
+.floor-grid{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:auto;gap:3px;min-height:280px}
 .zone{border-radius:6px;padding:6px 4px;text-align:center;font-size:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1.2;border:2px solid transparent;transition:all .3s ease;min-height:44px;position:relative;word-break:break-word}
 .zone:active{transform:scale(0.96);opacity:.8}
 
@@ -98,9 +98,7 @@ body.light-mode .zone-roof{background:rgba(107,114,128,0.35)}
 .zone.heat-gray{background:rgba(107,114,128,0.3)!important;border-color:#6b7280}
 
 /* Zone grid areas */
-.zone-roof-area{grid-column:1/7}
-.zone-gen1{grid-row:2/4}
-.zone-gen2{grid-row:2/4}
+.zone-roof-area{grid-column:1/9}
 
 /* Floor legend */
 .floor-legend{display:flex;flex-wrap:wrap;gap:8px;padding:6px 8px;justify-content:center}
@@ -567,7 +565,7 @@ function tryClipboardAutoFill(){
 /* ===== FLOOR PLAN ===== */
 function renderFloorPlan() {
   var grid=document.getElementById('floorGrid');
-  grid.style.gridTemplateAreas='"roof roof roof roof roof roof" ". dahu1o fire iw dahu2o ." ". dahu1e dh dh dahu2e ." "er1 er1 office mv er2 er2" "gen1 gen1 diesel diesel gen2 gen2"';
+  grid.style.gridTemplateAreas='"roof roof roof roof roof roof roof roof" "dahu1o dahu1o fire fire iw iw dahu2o dahu2o" "dahu1e dahu1e dh dh dh dh dahu2e dahu2e" "er1 er1 office office mv mv er2 er2" "gen1 gen1 diesel diesel diesel diesel gen2 gen2"';
   var html='';
   for(var i=0;i<zoneMap.length;i++){
     var z=zoneMap[i];
