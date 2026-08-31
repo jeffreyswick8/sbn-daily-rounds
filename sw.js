@@ -1,4 +1,4 @@
-var CACHE_NAME = 'sbn-rounds-v10';
+var CACHE_NAME = 'sbn-rounds-v12';
 var urlsToCache = [
   '/sbn-daily-rounds/',
   '/sbn-daily-rounds/index.html',
