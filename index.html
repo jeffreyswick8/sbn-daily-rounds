@@ -225,11 +225,11 @@ body.light-mode .btn-allok{background:#dcfce7;color:#166534;border:2px solid #22
 <div class="start-label">Building</div>
 <div class="building-grid" id="buildingGrid"></div>
 <div class="start-label">Technician</div>
-<input class="start-input" type="text" id="techName" placeholder="Your name" autocomplete="off">
+<input class="start-input" type="text" id="techName" placeholder="Your name" autocomplete="off" inputmode="text">
 <div class="start-label">Shift</div>
 <div class="shift-grid" id="shiftGrid"></div>
 <div class="start-label">Daily Ticket URL</div>
-<input class="start-input" type="text" id="ticketUrl" placeholder="Ticket URL or number (optional)" autocomplete="off">
+<input class="start-input" type="text" id="ticketUrl" placeholder="Ticket URL or number (optional)" autocomplete="off" inputmode="text">
 <div id="clipboardHint" style="display:none;font-size:11px;color:var(--green);margin:-8px 0 8px 4px">✅ Auto-detected from clipboard</div>
 <div class="start-label">Date</div>
 <input class="start-input" type="date" id="roundDate">
@@ -870,7 +870,7 @@ function renderWalkthrough() {
   if(sec.type==='notes_only'){
     html+='<div style="padding:12px"><button class="btn-allok" onclick="markAllOk()">ALL OK &#9989;</button>';
     html+='<div class="section-notes"><label>Notes for '+escHtml(sec.name)+'</label>';
-    html+='<textarea id="notesOnly" placeholder="Enter notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div></div>';
+    html+='<textarea id="notesOnly" inputmode="text" placeholder="Enter notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div></div>';
   } else {
     var okLabel=sec.type==='exp_unexp'?'Expected':'OK';
     var issueLabel=sec.type==='exp_unexp'?'Unexpected':'Issue';
@@ -889,7 +889,7 @@ function renderWalkthrough() {
       html+='</div></div></div>';
       if(item.status==='issue'||item.status==='unexpected'){
         html+='<div class="issue-detail">';
-        html+='<textarea class="issue-note" placeholder="Describe the issue..." oninput="updateItemNote('+currentSection+','+idx+',this.value)">'+escHtml(item.note)+'</textarea>';
+        html+='<textarea class="issue-note" inputmode="text" placeholder="Describe the issue..." oninput="updateItemNote('+currentSection+','+idx+',this.value)">'+escHtml(item.note)+'</textarea>';
         var photoKey=currentSection+'-'+idx;
         var photos=photoStore[photoKey]||[];
         if(photos.length<3){
@@ -908,7 +908,7 @@ function renderWalkthrough() {
     }
     html+='</div>';
     html+='<div class="section-notes"><label>Section Notes (optional)</label>';
-    html+='<textarea placeholder="General notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div>';
+    html+='<textarea inputmode="text" placeholder="General notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div>';
   }
   document.getElementById('walkContent').innerHTML=html;
   if(sec.type!=='notes_only') for(var si=0;si<sec.cols.length;si++) attachSwipe(document.getElementById('card-'+si),currentSection,si,sec.type);
@@ -1203,6 +1203,18 @@ document.getElementById('btnFlipCam').addEventListener('click',function(){
 });
 document.getElementById('btnClosePreview').addEventListener('click',function(){document.getElementById('photoPreviewModal').style.display='none';});
 function closeCameraModal(){if(cameraStream){var tracks=cameraStream.getTracks();for(var i=0;i<tracks.length;i++)tracks[i].stop();cameraStream=null;}document.getElementById('cameraModal').style.display='none';}
+
+/* ===== WINDOWS TABLET KEYBOARD FIX ===== */
+(function(){
+  if('virtualKeyboard' in navigator){navigator.virtualKeyboard.overlaysContent=true;}
+  document.addEventListener('focusin',function(e){
+    var tag=e.target.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){
+      if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}
+      e.target.setAttribute('enterkeyhint','done');
+    }
+  });
+})();
 
 /* ===== SERVICE WORKER ===== */
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
