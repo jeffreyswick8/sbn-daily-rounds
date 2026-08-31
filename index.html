@@ -412,6 +412,7 @@ var db = null;
 var cameraStream = null;
 var cameraSIdx = -1;
 var cameraIIdx = -1;
+var cameraFacing = 'environment';
 var isEditing = false;
 var editKey = null;
 var heatMapOn = false;
@@ -566,7 +567,7 @@ function tryClipboardAutoFill(){
 /* ===== FLOOR PLAN ===== */
 function renderFloorPlan() {
   var grid=document.getElementById('floorGrid');
-  grid.style.gridTemplateAreas='"roof roof roof roof roof roof" "gen1 dahu1o office mv dahu2o gen2" "gen1 dahu1e dh dh dahu2e gen2" "er1 er1 fire iw er2 er2" ". . diesel diesel . ."';
+  grid.style.gridTemplateAreas='"roof roof roof roof roof roof" ". dahu1o fire iw dahu2o ." ". dahu1e dh dh dahu2e ." "er1 er1 office mv er2 er2" "gen1 gen1 diesel diesel gen2 gen2"';
   var html='';
   for(var i=0;i<zoneMap.length;i++){
     var z=zoneMap[i];
@@ -987,13 +988,23 @@ function nextSection(){
 /* ===== PHOTOS ===== */
 function openCamera(sIdx,iIdx){
   cameraSIdx=sIdx;cameraIIdx=iIdx;
+  cameraFacing='environment';
   if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-    var constraints={video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}};
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
-      cameraStream=stream;var video=document.getElementById('cameraVideo');video.srcObject=stream;video.onloadedmetadata=function(){video.play();};
-      document.getElementById('cameraModal').style.display='flex';
-    }).catch(function(){var inp=document.getElementById('fileInp-'+sIdx+'-'+iIdx);if(inp)inp.click();});
+    document.getElementById('cameraModal').style.display='flex';
+    startCameraStream().catch(function(){
+      document.getElementById('cameraModal').style.display='none';
+      var inp=document.getElementById('fileInp-'+sIdx+'-'+iIdx);if(inp)inp.click();
+    });
   } else {var inp=document.getElementById('fileInp-'+sIdx+'-'+iIdx);if(inp)inp.click();}
+}
+function startCameraStream(){
+  if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop();});cameraStream=null;}
+  return navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:cameraFacing},width:{ideal:1280},height:{ideal:720}}})
+  .catch(function(){return navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing},width:{ideal:1280},height:{ideal:720}}});})
+  .then(function(stream){
+    cameraStream=stream;var video=document.getElementById('cameraVideo');video.srcObject=stream;video.onloadedmetadata=function(){video.play();};
+    return stream;
+  });
 }
 function handlePhoto(input,sIdx,iIdx){
   var file=input.files[0];if(!file)return;
@@ -1186,11 +1197,11 @@ document.getElementById('btnCapture').addEventListener('click',function(){
 });
 document.getElementById('btnCamCancel').addEventListener('click',closeCameraModal);
 document.getElementById('btnFlipCam').addEventListener('click',function(){
-  if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop();});cameraStream=null;}
-  var constraints={video:{facingMode:{ideal:'user'},width:{ideal:1280},height:{ideal:720}}};
-  navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
-    cameraStream=stream;var video=document.getElementById('cameraVideo');video.srcObject=stream;video.onloadedmetadata=function(){video.play();};
-  }).catch(function(){});
+  cameraFacing=(cameraFacing==='environment')?'user':'environment';
+  startCameraStream().catch(function(){
+    cameraFacing=(cameraFacing==='environment')?'user':'environment';
+    startCameraStream().catch(function(){});
+  });
 });
 document.getElementById('btnClosePreview').addEventListener('click',function(){document.getElementById('photoPreviewModal').style.display='none';});
 function closeCameraModal(){if(cameraStream){var tracks=cameraStream.getTracks();for(var i=0;i<tracks.length;i++)tracks[i].stop();cameraStream=null;}document.getElementById('cameraModal').style.display='none';}
