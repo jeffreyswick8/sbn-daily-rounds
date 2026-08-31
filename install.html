@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Install SBN Daily Rounds</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a1628;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{max-width:420px;width:100%;text-align:center}
+.icon{width:80px;height:80px;background:#ff9900;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:40px;box-shadow:0 8px 24px rgba(255,153,0,0.3)}
+h1{font-size:24px;color:#ff9900;margin-bottom:4px}
+.sub{font-size:14px;color:#94a3b8;margin-bottom:24px}
+.qr-box{background:#112240;border:2px solid #234270;border-radius:16px;padding:20px;margin-bottom:20px}
+.qr-box canvas{border-radius:8px}
+.qr-label{font-size:11px;color:#94a3b8;margin-top:10px}
+.install-btn{display:block;width:100%;padding:16px;background:#ff9900;color:#0a1628;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;margin-bottom:12px;min-height:56px;transition:all .2s}
+.install-btn:active{transform:scale(0.97);opacity:.8}
+.install-btn:disabled{opacity:.5;cursor:not-allowed}
+.install-btn.installed{background:#22c55e;color:#fff}
+.open-btn{display:none;width:100%;padding:14px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:12px;min-height:48px}
+.url-box{background:#112240;border:1px solid #234270;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.url-text{flex:1;font-size:12px;color:#ff9900;word-break:break-all;text-align:left;font-family:monospace}
+.copy-btn{background:#234270;border:1px solid #374151;color:#f5f5f5;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.copy-btn:active{background:#ff9900;color:#0a1628}
+.steps{background:#112240;border:1px solid #234270;border-radius:12px;padding:16px;text-align:left;margin-bottom:16px}
+.steps h3{font-size:14px;color:#ff9900;margin-bottom:10px}
+.step{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.4}
+.step:last-child{margin-bottom:0}
+.step-num{background:#ff9900;color:#0a1628;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.step-text{color:#94a3b8}
+.step-text b{color:#f5f5f5}
+.badge{display:inline-block;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:16px}
+.footer{font-size:11px;color:#475569;margin-top:20px}
+.platform-note{font-size:12px;color:#94a3b8;background:#1a2332;border-radius:8px;padding:10px;margin-bottom:16px}
+.status{font-size:13px;margin-bottom:16px;padding:10px;border-radius:8px}
+.status.online{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
+.status.offline{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
+.print-section{margin-top:16px}
+.print-btn{background:#234270;border:1px solid #374151;color:#f5f5f5;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.print-btn:active{background:#ff9900;color:#0a1628}
+@media print{
+body{background:#fff;color:#000;padding:0}
+.container{max-width:100%}
+h1{color:#000}
+.sub,.qr-label,.footer,.step-text{color:#333}
+.qr-box{border-color:#ccc;background:#f5f5f5}
+.steps{border-color:#ccc;background:#f9f9f9}
+.steps h3{color:#000}
+.step-num{background:#000;color:#fff}
+.install-btn,.open-btn,.copy-btn,.print-btn,.url-box,.badge,.status,.platform-note{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="icon">🔧</div>
+<h1>SBN Daily Rounds</h1>
+<div class="sub">DCEO Building Walkthrough App</div>
+
+<div id="statusBar" class="status online">Checking connection...</div>
+
+<div class="qr-box">
+<canvas id="qrCanvas"></canvas>
+<div class="qr-label">Scan with tablet camera to open</div>
+</div>
+
+<button class="install-btn" id="installBtn" onclick="installApp()">📲 Install App</button>
+<button class="open-btn" id="openBtn" onclick="window.location.href='https://jeffreyswick8.github.io/sbn-daily-rounds/'">✅ Open App</button>
+
+<div class="url-box">
+<div class="url-text" id="appUrl">https://jeffreyswick8.github.io/sbn-daily-rounds/</div>
+<button class="copy-btn" onclick="copyUrl()">Copy</button>
+</div>
+
+<div class="steps" id="manualSteps">
+<h3>📋 Manual Install (if button doesn't work)</h3>
+<div class="step"><div class="step-num">1</div><div class="step-text">Open <b>Chrome</b> on the tablet</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Go to the URL above (tap <b>Copy</b> and paste in address bar)</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Tap the <b>⋮ menu</b> (three dots, top right)</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text">Tap <b>"Install app"</b> or <b>"Add to Home screen"</b></div></div>
+<div class="step"><div class="step-num">5</div><div class="step-text">Tap <b>Install</b> to confirm — app icon appears on home screen</div></div>
+</div>
+
+<div class="platform-note" id="platformNote"></div>
+
+<div class="print-section">
+<button class="print-btn" onclick="window.print()">🖨️ Print This Page (QR Poster)</button>
+</div>
+
+<div class="footer">SBN207 DCEO &bull; v15</div>
+</div>
+
+<script>
+// ===== QR CODE GENERATOR (standalone, no CDN needed) =====
+// Minimal QR encoder — supports up to ~100 chars at EC level M
+(function(){
+var APP_URL='https://jeffreyswick8.github.io/sbn-daily-rounds/';
+
+// Use a canvas-based approach with the Google Charts Image API as data source
+// This is the most reliable cross-browser approach without external JS libraries
+var canvas=document.getElementById('qrCanvas');
+var ctx=canvas.getContext('2d');
+canvas.width=200;canvas.height=200;
+
+// Draw a placeholder while image loads
+ctx.fillStyle='#112240';ctx.fillRect(0,0,200,200);
+ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';
+ctx.fillText('Loading QR...',100,105);
+
+var img=new Image();
+img.crossOrigin='anonymous';
+img.onload=function(){
+  canvas.width=200;canvas.height=200;
+  ctx.fillStyle='#0a1628';ctx.fillRect(0,0,200,200);
+  ctx.drawImage(img,10,10,180,180);
+};
+img.onerror=function(){
+  // Fallback: just show the URL prominently
+  canvas.width=200;canvas.height=200;
+  ctx.fillStyle='#0a1628';ctx.fillRect(0,0,200,200);
+  ctx.fillStyle='#ff9900';ctx.font='bold 14px monospace';ctx.textAlign='center';
+  ctx.fillText('Scan not available',100,90);
+  ctx.fillStyle='#94a3b8';ctx.font='11px sans-serif';
+  ctx.fillText('Use the URL below',100,115);
+};
+img.src='https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl='+encodeURIComponent(APP_URL)+'&chco=FF9900&chf=bg,s,0A1628';
+
+// ===== PWA INSTALL PROMPT =====
+var deferredPrompt=null;
+var installBtn=document.getElementById('installBtn');
+var openBtn=document.getElementById('openBtn');
+
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  installBtn.textContent='📲 Install App Now';
+  installBtn.disabled=false;
+});
+
+window.addEventListener('appinstalled',function(){
+  installBtn.textContent='✅ App Installed!';
+  installBtn.className='install-btn installed';
+  installBtn.disabled=true;
+  openBtn.style.display='block';
+  deferredPrompt=null;
+});
+
+window.installApp=function(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(result){
+      if(result.outcome==='accepted'){
+        installBtn.textContent='✅ Installing...';
+      }
+      deferredPrompt=null;
+    });
+  } else {
+    // No deferred prompt — redirect to the app URL
+    window.location.href=APP_URL;
+  }
+};
+
+// ===== COPY URL =====
+window.copyUrl=function(){
+  var url=document.getElementById('appUrl').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      var btn=document.querySelector('.copy-btn');btn.textContent='Copied!';
+      setTimeout(function(){btn.textContent='Copy';},2000);
+    });
+  } else {
+    var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');var btn=document.querySelector('.copy-btn');btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy';},2000);}catch(e){}
+    document.body.removeChild(ta);
+  }
+};
+
+// ===== CONNECTION STATUS =====
+var statusBar=document.getElementById('statusBar');
+if(navigator.onLine){statusBar.textContent='✅ Online — ready to install';statusBar.className='status online';}
+else{statusBar.textContent='⚠️ Offline — connect to WiFi first';statusBar.className='status offline';}
+window.addEventListener('online',function(){statusBar.textContent='✅ Online — ready to install';statusBar.className='status online';});
+window.addEventListener('offline',function(){statusBar.textContent='⚠️ Offline — connect to WiFi first';statusBar.className='status offline';});
+
+// ===== PLATFORM DETECTION =====
+var note=document.getElementById('platformNote');
+var ua=navigator.userAgent;
+if(/Windows/i.test(ua)){note.textContent='💻 Windows detected — use Chrome or Edge for best PWA support. Enable touch keyboard in Settings → Typing.';}
+else if(/Android/i.test(ua)){note.textContent='📱 Android detected — Chrome will show an install banner automatically.';}
+else if(/iPad|iPhone/i.test(ua)){note.textContent='🍎 iOS detected — use Safari, then tap Share → "Add to Home Screen".';}
+else{note.textContent='Open in Chrome for the best install experience.';}
+
+// Check if already installed (standalone mode)
+if(window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone){
+  installBtn.textContent='✅ Already Installed';installBtn.className='install-btn installed';installBtn.disabled=true;
+  openBtn.style.display='block';
+}
+})();
+</script>
+</body>
+</html>
