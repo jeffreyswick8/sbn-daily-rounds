@@ -397,9 +397,9 @@ body.light-mode .warning-banner{background:#fef3c7;color:#92400e;border-color:#f
 var sections = [
   {name:'Office Area',desc:'Check all sub-zones: Bullpen, MDF Room, MMR (if applicable), Breakroom, Conference Rooms, Electrical Closet, Corridors, ACS/MaxCool panels, Fire Alarm Panel. Verify systems are free of unexpected alarms, doors are secured, and EPMS is operational.',cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel'],type:'ok_issue'},
   {name:'Medium Voltage Switchgear A and B',desc:'Check that all breakers are in normal alignment, FLoReS is in AUTO, relay status is good, and free of alarms. Check Controls UPS Voltage (110 Vdc - 140 Vdc). Verify no audible or visual alarms present.',cols:['Breaker Status','FLoReS','UPS','Audible/Visual'],type:'ok_issue'},
-  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1A','XMFR 1.1A','GEN 1.1B','XMFR 1.1B','GEN 1.1C','XMFR 1.1C','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp'},
+  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1C','XMFR 1.1C','GEN 1.1A','XMFR 1.1A','GEN 1.1B','XMFR 1.1B','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp'},
   {name:'Diesel Fuel System',desc:'Check for leaks in fuel piping, tank, and pumps. Ensure pumps are in auto and free of alarms. Verify fuel level is above 80%. Inspect piping connections, valves, and containment area for signs of leakage or debris.',cols:['Piping','Tank','Pumps','Audible/Visual'],type:'exp_unexp'},
-  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['GEN 2.1A','XMFR 2.1A','GEN 2.1B','XMFR 2.1B','GEN 2.1C','XMFR 2.1C','GEN 2.2A','XMFR 2.2A','GEN 2.2B','XMFR 2.2B','GEN 2.3A','XFMR 2.3A','GEN 2.3B','XFMR 2.3B','GEN 2.4A','XFMR 2.4A','GEN 2.4B','XFMR 2.4B','GEN 2.5A','XFMR 2.5A','GEN 2.5B','XFMR 2.5B','GEN 2.6A','XFMR 2.6A','GEN 2.6B','XFMR 2.6B'],type:'exp_unexp'},
+  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.4B','XFMR 2.4B','GEN 2.4A','XFMR 2.4A','GEN 2.3B','XFMR 2.3B','GEN 2.3A','XFMR 2.3A','GEN 2.2B','XMFR 2.2B','GEN 2.2A','XMFR 2.2A','GEN 2.1B','XMFR 2.1B','GEN 2.1A','XMFR 2.1A','GEN 2.1C','XMFR 2.1C'],type:'exp_unexp'},
   {name:'Electrical Room 1.1-1.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS/HUPS, DLB, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['HSSB','Lineup 1.1A','Lineup 1.1B','Lineup 1.1C','Lineup 1.2A','Lineup 1.2B','Lineup 1.3A','Lineup 1.3B','Lineup 1.4A','Lineup 1.4B','Lineup 1.5A','Lineup 1.5B','Lineup 1.6A','Lineup 1.6B'],type:'ok_issue'},
   {name:'DAHU Gallery 1 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['1.1-001','1.1-003','1.1-005','1.1-007','1.1-009','1.2-001','1.2-003','1.2-005','1.2-007','1.3-001','1.3-003','1.3-005','1.3-007','1.4-001','1.4-003','1.4-005','1.4-007','1.5-001','1.5-003','1.5-005','1.5-007','1.6-001','1.6-003','1.6-005','1.6-007'],type:'ok_issue'},
   {name:'Electrical Room 2.1-2.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['Lineup 2.1A','Lineup 2.1B','Lineup 2.1C','Lineup 2.2A','Lineup 2.2B','Lineup 2.3A','Lineup 2.3B','Lineup 2.4A','Lineup 2.4B','Lineup 2.5A','Lineup 2.5B','Lineup 2.6A','Lineup 2.6B'],type:'ok_issue'},
@@ -414,21 +414,21 @@ var sections = [
 
 /* ===== ZONE MAP ===== */
 var zoneMap = [
-  {id:'roof',label:'Roof',sIdx:13,type:'roof'},
-  {id:'gen-dh1',label:'Gen Yard DH1',sIdx:2,type:'generator'},
-  {id:'dahu-1-odds',label:'DAHU Gallery 1 (Odds)',sIdx:6,type:'dahu'},
   {id:'office',label:'Office Area',sIdx:0,type:'office'},
   {id:'mv-swgr',label:'MV Switchgear A & B',sIdx:1,type:'electrical'},
-  {id:'dahu-2-odds',label:'DAHU Gallery 2 (Odds)',sIdx:8,type:'dahu'},
-  {id:'gen-dh2',label:'Gen Yard DH2',sIdx:4,type:'generator'},
-  {id:'dahu-1-evens',label:'DAHU Gallery 1 (Evens)',sIdx:9,type:'dahu'},
-  {id:'data-hall',label:'Data Hall',sIdx:14,type:'datahall'},
-  {id:'dahu-2-evens',label:'DAHU Gallery 2 (Evens)',sIdx:10,type:'dahu'},
+  {id:'gen-dh1',label:'Gen Yard DH1',sIdx:2,type:'generator'},
+  {id:'diesel',label:'Diesel Fuel System',sIdx:3,type:'generator'},
   {id:'er-1',label:'Electrical Room 1.1-1.6',sIdx:5,type:'electrical'},
-  {id:'fire-riser',label:'Fire Riser Room',sIdx:11,type:'fire'},
+  {id:'dahu-1-odds',label:'DAHU Gallery 1 (Odds)',sIdx:6,type:'dahu'},
+  {id:'dahu-1-evens',label:'DAHU Gallery 1 (Evens)',sIdx:9,type:'dahu'},
+  {id:'roof',label:'Roof',sIdx:13,type:'roof'},
   {id:'iw-room',label:'IW Room',sIdx:12,type:'fire'},
+  {id:'fire-riser',label:'Fire Riser Room',sIdx:11,type:'fire'},
+  {id:'dahu-2-evens',label:'DAHU Gallery 2 (Evens)',sIdx:10,type:'dahu'},
+  {id:'dahu-2-odds',label:'DAHU Gallery 2 (Odds)',sIdx:8,type:'dahu'},
   {id:'er-2',label:'Electrical Room 2.1-2.6',sIdx:7,type:'electrical'},
-  {id:'diesel',label:'Diesel Fuel System',sIdx:3,type:'generator'}
+  {id:'gen-dh2',label:'Gen Yard DH2',sIdx:4,type:'generator'},
+  {id:'data-hall',label:'Data Hall',sIdx:14,type:'datahall'}
 ];
 
 var zoneIcons={datahall:'&#9889;',dahu:'&#10052;',electrical:'&#9889;',generator:'&#9881;',office:'&#127970;',fire:'&#128167;',roof:'&#127748;'};
