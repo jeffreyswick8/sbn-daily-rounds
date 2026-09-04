@@ -350,6 +350,14 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 .compliance-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
 .compliance-stat-val{font-size:24px;font-weight:700}
 .compliance-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+
+/* ===== COMPLIANCE FINDINGS VIEW ===== */
+.compliance-findings-view{padding:16px}
+.compliance-back{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px;padding:8px 0}
+.compliance-back:active{opacity:0.7}
+.compliance-bldg-group{margin-bottom:20px}
+.compliance-bldg-label{font-size:14px;font-weight:700;color:var(--accent);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.compliance-bldg-count{font-size:12px;color:var(--muted);font-weight:600}
 </style>
 </head>
 <body>
@@ -626,7 +634,7 @@ function initStartScreen(){
   for(var i=0;i<buildings.length;i++)html+='<button class="building-btn" data-bldg="'+buildings[i]+'">'+buildings[i]+'</button>';
   grid.innerHTML=html;
   var btns=grid.querySelectorAll('.building-btn');
-  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();});
+  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();if(db)loadRecentRounds(this.getAttribute('data-bldg'));});
   var sg=document.getElementById('shiftGrid');
   sg.innerHTML='<button class="shift-btn" data-shift="Days">Days</button><button class="shift-btn" data-shift="Nights">Nights</button>';
   var sb=sg.querySelectorAll('.shift-btn');
@@ -641,14 +649,23 @@ function checkReady(){var ok=getSelectedBuilding()&&document.getElementById('tec
 function beginRounds(){
   currentSection=0;photoStore={};noteEditState={};
   var selectedBldg=getSelectedBuilding();
+  if(!selectedBldg){showToast('Please select a building');return;}
+  if(!document.getElementById('techName').value.trim()){showToast('Please enter your alias');return;}
+  if(!getSelectedShift()){showToast('Please select a shift');return;}
+  // Show loading state
+  var btn=document.getElementById('btnBegin');
+  var origText=btn.textContent;btn.textContent='LOADING...';btn.disabled=true;
+  var loaded=false;
   if(db){
+    var timeout=setTimeout(function(){if(!loaded){loaded=true;activeSections=defaultSections;startRoundsWithSections(selectedBldg);btn.textContent=origText;btn.disabled=false;}},5000);
     db.ref('config/sections/'+selectedBldg).once('value',function(snap){
+      if(loaded)return;loaded=true;clearTimeout(timeout);
       var val=snap.val();
       if(val&&Array.isArray(val)&&val.length>0){activeSections=val;}
       else{activeSections=defaultSections;db.ref('config/sections/'+selectedBldg).set(defaultSections);}
-      startRoundsWithSections(selectedBldg);
-    },function(){activeSections=defaultSections;startRoundsWithSections(selectedBldg);});
-  }else{activeSections=defaultSections;startRoundsWithSections(selectedBldg);}
+      btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);
+    },function(){if(loaded)return;loaded=true;clearTimeout(timeout);activeSections=defaultSections;btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);});
+  }else{activeSections=defaultSections;btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);}
 }
 function startRoundsWithSections(selectedBldg){
   var secs=[];
@@ -1131,10 +1148,10 @@ function generateExcel(){
 }
 
 /* ===== RECENT ROUNDS ===== */
-function loadRecentRounds(){
+function loadRecentRounds(filterBuilding){
   tryClipboardAutoFill();
   if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
-  var buildings=['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
+  var buildings=filterBuilding?[filterBuilding]:buildingList;
   var allRounds=[];var pending=0;var today=new Date();
   for(var d=0;d<7;d++){var dt=new Date(today);dt.setDate(dt.getDate()-d);
     var ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
@@ -1200,7 +1217,7 @@ function renderComplianceResults(results){
   var sHtml='';
   sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--green)">'+walkedCount+'</div><div class="compliance-stat-lbl">Walked</div></div>';
   sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--red)">'+notWalkedCount+'</div><div class="compliance-stat-lbl">Not Walked</div></div>';
-  sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--amber)">'+totalFindings+'</div><div class="compliance-stat-lbl">Open Findings</div></div>';
+  sHtml+='<div class="compliance-stat" style="cursor:pointer" onclick="showComplianceFindings()"><div class="compliance-stat-val" style="color:var(--amber)">'+totalFindings+'</div><div class="compliance-stat-lbl">Open Findings &#8594;</div></div>';
   document.getElementById('complianceSummary').innerHTML=sHtml;
   var sorted=buildingList.slice().sort(function(a,b){if(results[a].walked===results[b].walked)return a.localeCompare(b);return results[a].walked?1:-1;});
   var gHtml='';
@@ -1211,6 +1228,45 @@ function renderComplianceResults(results){
     gHtml+='<div class="compliance-card '+cls+'"><div class="compliance-info"><div class="compliance-bldg">'+bldg+'</div><div class="compliance-status">'+status+'</div></div>'+badge+'</div>';
   });
   document.getElementById('complianceGrid').innerHTML=gHtml;
+}
+function showComplianceFindings(){
+  if(!db)return;
+  var container=document.getElementById('tabCompliance');
+  container.innerHTML='<div class="compliance-findings-view"><div class="compliance-back" onclick="backToCompliance()">&#8592; Back to Dashboard</div><div style="font-size:16px;font-weight:700;margin-bottom:16px">All Open Findings</div><div id="complianceFindingsList"><div style="text-align:center;padding:24px;color:var(--muted)">Loading findings...</div></div></div>';
+  var pending=0;var allF={};
+  buildingList.forEach(function(bldg){
+    allF[bldg]=[];pending++;
+    db.ref('findings/'+bldg).once('value',function(snap){
+      var val=snap.val();if(val){var keys=Object.keys(val);keys.forEach(function(k){var f=val[k];if(f.status==='open'){f._key=k;f._bldg=bldg;allF[bldg].push(f);}});}
+      pending--;if(pending===0)renderComplianceFindings(allF);
+    },function(){pending--;if(pending===0)renderComplianceFindings(allF);});
+  });
+}
+function renderComplianceFindings(allF){
+  var html='';var total=0;
+  buildingList.forEach(function(bldg){
+    var findings=allF[bldg]||[];
+    findings.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0);});
+    total+=findings.length;
+    if(findings.length===0)return;
+    html+='<div class="compliance-bldg-group">';
+    html+='<div class="compliance-bldg-label"><span>'+escHtml(bldg)+'</span><span class="compliance-bldg-count">'+findings.length+' open</span></div>';
+    findings.forEach(function(f){
+      html+='<div class="finding-card"><div class="finding-zone">'+escHtml(f.zone||'')+'</div>';
+      html+='<div class="finding-item">'+escHtml(f.item||'')+'</div>';
+      if(f.note)html+='<div class="finding-note">'+escHtml(f.note)+'</div>';
+      html+='<div class="finding-meta"><span>'+escHtml(f.technician||'')+' &bull; '+escHtml(f.date||'')+(f.photos?' &bull; '+f.photos+' photo(s)':'')+'</span></div></div>';
+    });
+    html+='</div>';
+  });
+  if(total===0)html='<div class="finding-empty">&#9989; No open findings across any building</div>';
+  else html='<div style="font-size:13px;color:var(--muted);margin-bottom:12px">'+total+' open finding'+(total>1?'s':'')+' across all buildings</div>'+html;
+  document.getElementById('complianceFindingsList').innerHTML=html;
+}
+function backToCompliance(){
+  var container=document.getElementById('tabCompliance');
+  container.innerHTML='<div class="compliance-header"><strong>Campus Compliance</strong><br>Building walk status for today</div><div class="compliance-summary" id="complianceSummary"></div><div class="compliance-grid" id="complianceGrid"></div>';
+  renderCompliance();
 }
 
 /* ===== SHIFT HANDOFF NOTES ===== */
@@ -1341,7 +1397,21 @@ function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initia
 function loadBuildingConfig(){
   if(!db)return;syncOfflineQueue();updateOfflineBadge();
   db.ref('config/buildings').once('value',function(snap){
-    var val=snap.val();if(val&&Array.isArray(val)&&val.length>0){buildingList=val;initStartScreen();}
+    var val=snap.val();if(val&&Array.isArray(val)&&val.length>0){
+      buildingList=val;
+      // Preserve user selections before re-init
+      var prevBldg=getSelectedBuilding();
+      var prevShift=getSelectedShift();
+      var prevAlias=document.getElementById('techName').value;
+      var prevTicket=document.getElementById('ticketUrl').value;
+      initStartScreen();
+      // Restore selections
+      if(prevBldg){var bb=document.querySelector('.building-btn[data-bldg="'+prevBldg+'"]');if(bb)bb.classList.add('selected');}
+      if(prevShift){var sb=document.querySelector('.shift-btn[data-shift="'+prevShift+'"]');if(sb)sb.classList.add('selected');}
+      if(prevAlias)document.getElementById('techName').value=prevAlias;
+      if(prevTicket)document.getElementById('ticketUrl').value=prevTicket;
+      checkReady();
+    }
     else{db.ref('config/buildings').set(buildingList);}
   });
 }
