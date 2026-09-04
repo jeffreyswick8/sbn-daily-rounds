@@ -50,6 +50,23 @@ var cameraStream=null;var cameraSIdx=-1;var cameraIIdx=-1;var cameraFacing='envi
 var isEditing=false;var editKey=null;var zoneStatusCache={};var allFindings=[];var allHistory=[];
 var activeBuilding='';var currentFilter='all';var noteEditState={};
 
+/* ===== MVNR SITE DETECTION ===== */
+function isMVNR(bldg){
+  if(!bldg)return false;
+  var num=parseInt(bldg.replace(/[^0-9]/g,''));
+  return num>=200&&num<=209;
+}
+var mvnrNotes={
+  'Medium Voltage Switchgear A and B':'MVNR: MV Loops 2 & 4 in MANUAL (auto restoration disabled) | MV Gear rated 71.6 MW, MVNR capacity 81 MW | Single utility loss: 6 lineups transfer to gen, EC2 racks load shed via BACOP',
+  'Electrical Room 1.1-1.6':'MVNR: ATC/ATS in transfer inhibit (S2 racked out, LOTO, manual mode) — Phase 1&2 | USB MCBC breakers LOTO\'d (catcher used as primary) | BACOP Gen limits: Pre-caution 100%, Caution 100% | COP 1.1A/B priority for load shed (purple star) | AMCOP: Gen stabilization 5s, utility loss 10s | PDC breaker LTD: 36s (thermal memory disabled)',
+  'Electrical Room 2.1-2.6':'MVNR: ATC/ATS in transfer inhibit (S2 racked out, LOTO, manual mode) — Phase 1&2 | USB MCBC breakers LOTO\'d (catcher used as primary) | BACOP Gen limits: Pre-caution 100%, Caution 100% | COP 2.1A/B priority for load shed (purple star) | AMCOP: Gen stabilization 5s, utility loss 10s | PDC breaker LTD: 36s (thermal memory disabled)',
+  'Data Hall':'MVNR: Catcher load is NORMAL (not zero) — catcher used as primary lineups | Single-source racks: verify powered on correct source | NW racks stay N+C config | EPMS alarms disabled: Primary Source Available, FC14 (catcher load), FC12 (catcher threshold), FC01 (system not in normal), PDC/USB Catcher Active',
+  'DAHU Gallery 1 (Odds)':'MVNR: DAHUs upgraded to 104,000 CFM | Supply fan max speed: 1,776 RPM | Filter DP high limit: 0.74 inWC | Exhaust fan max: 60 Hz',
+  'DAHU Gallery 1 (Evens)':'MVNR: DAHUs upgraded to 104,000 CFM | Supply fan max speed: 1,776 RPM | Filter DP high limit: 0.74 inWC | Exhaust fan max: 60 Hz',
+  'DAHU Gallery 2 (Odds)':'MVNR: DAHUs upgraded to 104,000 CFM | Supply fan max speed: 1,776 RPM | Filter DP high limit: 0.74 inWC | Exhaust fan max: 60 Hz',
+  'DAHU Gallery 2 (Evens)':'MVNR: DAHUs upgraded to 104,000 CFM | Supply fan max speed: 1,776 RPM | Filter DP high limit: 0.74 inWC | Exhaust fan max: 60 Hz'
+};
+
 /* ===== FIREBASE ===== */
 function initFirebase(){try{var app=firebase.initializeApp({apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6',storageBucket:'budget-tracket-200b6.firebasestorage.app',messagingSenderId:'442984201568',appId:'1:442984201568:web:8203ec4ffbf1a05b283205'},'rounds');db=firebase.app('rounds').database();}catch(e){try{db=firebase.app('rounds').database();}catch(e2){}}}
 function saveToFirebase(data,key){
@@ -180,7 +197,7 @@ function startRoundsWithSections(selectedBldg){
   }
   roundData={building:selectedBldg,technician:document.getElementById('techName').value.trim(),shift:getSelectedShift(),date:document.getElementById('roundDate').value||todayStr(),ticketUrl:document.getElementById('ticketUrl').value.trim(),startTime:Date.now(),endTime:null,status:'in_progress',sections:secs,lastModified:Date.now()};
   activeBuilding=roundData.building;
-  document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;
+  document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;if(isMVNR(activeBuilding)){document.getElementById('headerSub').textContent+=' [MVNR]';}
   showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
   switchMainTab('zones');
   }catch(e){alert('startRounds error: '+e.message);showScreen('startScreen');}
@@ -401,7 +418,14 @@ function renderWalkthrough(){
     html+='<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">';
     var vals=sec.cheatSheet.split(' | ');
     for(var v=0;v<vals.length;v++)html+='<div><strong>'+escHtml(vals[v].split(':')[0])+':</strong>'+escHtml(vals[v].split(':').slice(1).join(':'))+'</div>';
-    html+='</div></div></div>';
+        if(isMVNR(activeBuilding)&&mvnrNotes[sec.name]){
+      html+='<div style="border-top:1px solid var(--amber);padding-top:8px;margin-top:8px">';
+      html+='<div style="color:var(--amber);font-weight:700;font-size:12px;margin-bottom:4px">\u26A0 MVNR Site Values</div>';
+      var mvals=mvnrNotes[sec.name].split(' | ');
+      for(var mv=0;mv<mvals.length;mv++)html+='<div><strong>'+escHtml(mvals[mv].split(':')[0])+':</strong>'+escHtml(mvals[mv].split(':').slice(1).join(':'))+'</div>';
+      html+='</div>';
+    }
+html+='</div></div></div>';
   }
   // Walk content
   if(sec.type==='notes_only'){
