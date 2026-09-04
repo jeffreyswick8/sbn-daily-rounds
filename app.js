@@ -861,6 +861,7 @@ function renderRecentRounds(rounds){
     html+='<div class="r-meta">'+(r.technician||'')+' | '+(r.shift||'')+' | '+statusBadge+'</div></div>';
     html+='<div class="recent-actions">';
     html+='<button class="btn-edit" onclick="editRound(\''+escHtml(r._fbKey||'').replace(/'/g,"\\'")+'\')" >&#9999;&#65039; Edit</button>';
+    html+='<button style="padding:10px 12px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(245,158,11,0.15);color:var(--amber)" onclick="archiveRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')" >&#128230;</button>';
     html+='<button class="btn-del" onclick="deleteRound(\''+escHtml(r._fbKey||'').replace(/'/g,"\\'")+'\')" >&#128465; Del</button>';
     html+='</div></div>';
   }
