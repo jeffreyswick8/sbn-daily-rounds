@@ -429,6 +429,10 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <button class="btn-begin" id="btnBegin" onclick="beginRounds()">BEGIN ROUNDS</button>
 <button class="btn-begin" style="background:var(--card);color:var(--accent);border:1px solid var(--accent);margin-top:8px" onclick="openComplianceDirect()">&#128202; Campus Compliance Dashboard</button>
 <div class="recent-section">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<div class="start-label" style="margin:0">Recent Rounds</div>
+<button id="btnToggleArchived" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer" onclick="toggleArchivedRounds()">&#128230; Archived</button>
+</div>
 <div class="start-label">Recent Rounds</div>
 <div id="recentList"><div style="color:var(--muted);font-size:14px;text-align:center;padding:24px;">Loading...</div></div>
 </div>
@@ -1496,6 +1500,74 @@ function editRound(fbKey){
   });
 }
 function deleteRound(fbKey){if(!confirm('Delete this round?'))return;deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
+function archiveRound(fbKey){
+  if(!db||!fbKey)return;
+  if(!confirm('Archive this round? It will be removed from the home screen but saved for later.'))return;
+  db.ref(fbKey).once('value',function(snap){
+    var data=snap.val();if(!data){showToast('Round not found');return;}
+    // Save to archived path
+    var archiveKey=fbKey.replace('rounds/','archived/');
+    saveToFirebase(data,archiveKey);
+    // Remove from active rounds
+    deleteFromFirebase(fbKey);
+    showToast('Round archived');
+    setTimeout(loadRecentRounds,500);
+  });
+}
+var showingArchived=false;
+function toggleArchivedRounds(){
+  showingArchived=!showingArchived;
+  var btn=document.getElementById('btnToggleArchived');
+  if(showingArchived){
+    if(btn)btn.innerHTML='&#128260; Recent';
+    loadArchivedRounds();
+  }else{
+    if(btn)btn.innerHTML='&#128230; Archived';
+    loadRecentRounds();
+  }
+}
+function loadArchivedRounds(){
+  if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
+  var buildings=buildingList;var allRounds=[];var pending=0;
+  for(var b=0;b<buildings.length;b++){pending++;(function(bldg){
+    db.ref('archived/'+bldg).once('value',function(snap){
+      var val=snap.val();if(val){
+        var dates=Object.keys(val);dates.forEach(function(dt){
+          var rounds=val[dt];var keys=Object.keys(rounds);
+          keys.forEach(function(k){var r=rounds[k];r._fbKey='archived/'+bldg+'/'+dt+'/'+k;r._archived=true;allRounds.push(r);});
+        });
+      }
+      pending--;if(pending===0)renderArchivedRounds(allRounds);
+    },function(){pending--;if(pending===0)renderArchivedRounds(allRounds);});
+  })(buildings[b]);}
+}
+function renderArchivedRounds(rounds){
+  var listEl=document.getElementById('recentList');
+  if(rounds.length===0){listEl.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No archived rounds</div>';return;}
+  rounds.sort(function(a,b){return(b.startTime||0)-(a.startTime||0);});
+  var html='';
+  for(var i=0;i<Math.min(rounds.length,30);i++){
+    var r=rounds[i];
+    html+='<div class="recent-card" style="border-left:3px solid var(--amber)"><div class="recent-info"><div class="r-bldg">'+(r.building||'?')+' &mdash; '+(r.date||'')+'</div>';
+    html+='<div class="r-meta">'+(r.technician||'')+' | '+(r.shift||'')+' | <span style="color:var(--amber)">&#128230; Archived</span></div></div>';
+    html+='<div class="recent-actions">';
+    html+='<button style="padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(34,197,94,0.15);color:var(--green)" onclick="restoreRound(''+escHtml(r._fbKey||'').replace(/'/g,"\'")+'')">Restore</button>';
+    html+='<button class="btn-del" onclick="deleteRound(''+escHtml(r._fbKey||'').replace(/'/g,"\'")+'')">&#128465;</button>';
+    html+='</div></div>';
+  }
+  listEl.innerHTML=html;
+}
+function restoreRound(fbKey){
+  if(!db||!fbKey)return;
+  db.ref(fbKey).once('value',function(snap){
+    var data=snap.val();if(!data){showToast('Round not found');return;}
+    var activeKey=fbKey.replace('archived/','rounds/');
+    saveToFirebase(data,activeKey);
+    deleteFromFirebase(fbKey);
+    showToast('Round restored');
+    loadArchivedRounds();
+  });
+}
 /* ===== COMPLIANCE DASHBOARD ===== */
 function renderCompliance(){
   if(!db){
@@ -1610,7 +1682,7 @@ function renderHandoff(){
   }
   area.innerHTML=html;
 }
-function ackHandoff(){showToast('Handoff acknowledged');if(db&&activeBuilding&&handoffData){handoffData.acknowledgedBy=roundData?roundData.technician:'';handoffData.acknowledgedAt=Date.now();db.ref('handoff/'+activeBuilding+'/current').set(handoffData);}}
+function ackHandoff(){if(db&&activeBuilding&&handoffData){handoffData.acknowledgedBy=roundData?roundData.technician:'';handoffData.acknowledgedAt=Date.now();db.ref('handoff/'+activeBuilding+'/history/'+Date.now()).set(handoffData);db.ref('handoff/'+activeBuilding+'/current').remove();}handoffData=null;renderHandoff();showToast('Handoff acknowledged');}
 function startHandoffEdit(){handoffEditing=true;renderHandoff();}
 function cancelHandoffEdit(){handoffEditing=false;renderHandoff();}
 function saveHandoff(){
@@ -1773,4 +1845,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.7 -->
+<!-- v3.8 -->
