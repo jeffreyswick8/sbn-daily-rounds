@@ -69,6 +69,21 @@ var mvnrNotes={
 
 /* ===== FIREBASE ===== */
 function initFirebase(){try{var app=firebase.initializeApp({apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6',storageBucket:'budget-tracket-200b6.firebasestorage.app',messagingSenderId:'442984201568',appId:'1:442984201568:web:8203ec4ffbf1a05b283205'},'rounds');db=firebase.app('rounds').database();}catch(e){try{db=firebase.app('rounds').database();}catch(e2){}}}
+/* ===== AUTO-SAVE IN-PROGRESS ROUNDS ===== */
+function autoSaveRound(){
+  if(!roundData||!db||!activeBuilding)return;
+  if(roundData.status!=='in_progress')return;
+  roundData.lastModified=Date.now();roundData.currentSection=currentSection;
+  var key='rounds/'+activeBuilding+'/'+roundData.date+'/'+roundData.startTime;
+  if(isEditing&&editKey)key=editKey;
+  try{db.ref(key).set(roundData);}catch(e){}
+}
+function pauseRound(){
+  if(!roundData)return;
+  autoSaveRound();
+  showToast('Round paused — saved to recent rounds');
+  resetApp();
+}
 function saveToFirebase(data,key){
   if(!db){queueOfflineWrite('set',key,data);return;}
   try{db.ref(key).set(data).catch(function(){queueOfflineWrite('set',key,data);});}catch(e){queueOfflineWrite('set',key,data);}
@@ -496,7 +511,7 @@ html+='<div class="item-list">';
   updateNavButtons();updateMiniHeader();
 }
 /* ===== NOTE LOCK/UNLOCK ===== */
-function lockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=true;renderWalkthrough();}
+function lockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=true;renderWalkthrough();autoSaveRound();}
 function unlockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=false;renderWalkthrough();}
 
 /* ===== JUMP TO SECTION ===== */
@@ -528,14 +543,14 @@ function attachSwipe(card,sIdx,iIdx,type){
   card.addEventListener('click',function(e){if(swiping)return;if(e.target.closest('.issue-detail')||e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;var item=roundData.sections[sIdx].items[iIdx];var okSt=type==='exp_unexp'?'expected':'ok';var issueSt=type==='exp_unexp'?'unexpected':'issue';if(!item.status){item.status=okSt;}else if(item.status===okSt){item.status=issueSt;}else{item.status='';item.note='';item.noteLocked=false;}checkSectionComplete(sIdx);renderWalkthrough();});
 }
 
-function markItem(sIdx,iIdx,status){roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();}
+function markItem(sIdx,iIdx,status){roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();}
 function markAllOk(){
   var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
   var okStatus=sec.type==='exp_unexp'?'expected':'ok';
   for(var i=0;i<secData.items.length;i++){secData.items[i].status=okStatus;secData.items[i].noteLocked=false;}
   secData.allOk=true;secData.status='complete';secData.completedBy=roundData.technician;secData.completedAt=Date.now();
   if(currentSection<activeSections.length-1)currentSection++;
-  renderWalkthrough();renderZoneList();updateDashboardMetrics();var wc=document.getElementById('walkContent');if(wc)wc.scrollTop=0;
+  renderWalkthrough();renderZoneList();updateDashboardMetrics();var wc=document.getElementById('walkContent');if(wc)wc.scrollTop=0;autoSaveRound();
 }
 function updateItemNote(sIdx,iIdx,val){roundData.sections[sIdx].items[iIdx].note=val;updateNavButtons();}
 
@@ -569,7 +584,7 @@ function submitSectionNote(sIdx){
   secData.notesList.push(text);
   // Also store as joined string for backward compat with export
   secData.notes=secData.notesList.join('\n---\n');
-  inp.value='';renderWalkthrough();showToast('Note saved');
+  inp.value='';renderWalkthrough();showToast('Note saved');autoSaveRound();
 }
 function deleteSectionNote(sIdx,nIdx){
   var secData=roundData.sections[sIdx];
@@ -589,7 +604,8 @@ function checkSectionComplete(sIdx){
   var secData=roundData.sections[sIdx];var allDone=true,allOk=true;
   for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)allDone=false;if(secData.items[i].status==='issue'||secData.items[i].status==='unexpected')allOk=false;}
   if(allDone||activeSections[sIdx].type==='notes_only'){secData.status='complete';secData.allOk=allOk;secData.completedBy=roundData.technician;secData.completedAt=Date.now();}
-  renderZoneList();updateDashboardMetrics();
+  renderZoneList();updateDashboardMetrics();  autoSaveRound();
+
 }
 function updateNavButtons(){
   var secData=roundData.sections[currentSection];
@@ -954,7 +970,7 @@ function editRound(fbKey){
     // Log this edit
     roundData.editLog.push({alias:editAlias,timestamp:Date.now(),action:'opened for edit'});
     roundData.lastEditedBy=editAlias;roundData.lastEditedAt=Date.now();
-    isEditing=true;editKey=fbKey;currentSection=0;photoStore={};noteEditState={};
+    isEditing=true;editKey=fbKey;currentSection=roundData.currentSection||0;photoStore={};noteEditState={};
     activeBuilding=roundData.building;
     // Load building sections before opening (handles different section configs)
     db.ref('config/sections/'+activeBuilding).once('value',function(secSnap){
@@ -1281,6 +1297,10 @@ function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(fu
 /* ===== SERVICE WORKER ===== */
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 
+
+/* ===== AUTO-SAVE ON BACKGROUND ===== */
+document.addEventListener('visibilitychange',function(){if(document.hidden)autoSaveRound();});
+window.addEventListener('beforeunload',function(){autoSaveRound();});
 /* ===== INIT ===== */
 function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
 function loadBuildingConfig(){
