@@ -529,6 +529,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <button class="btn-share" id="btnShareFile" style="display:none;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:12px;min-height:56px" onclick="shareFile()">&#128228; Share Round Report</button>
 <button class="btn-download" id="btnDownloadFile" style="display:none;width:100%;padding:16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;min-height:56px" onclick="downloadAgain()">&#128229; Download Again</button>
 <button class="btn-handoff" style="width:100%;padding:16px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;min-height:56px" onclick="startHandoffFromDone()">&#128221; Leave Handoff Note</button>
+<button style="width:100%;padding:12px;background:none;color:var(--amber);border:1px dashed var(--amber);border-radius:var(--radius);font-size:13px;cursor:pointer;margin-top:12px" onclick="diagnoseShare()">&#128269; Diagnose Share Issue</button>
 <button class="btn-new-round" onclick="resetApp()">Start New Round</button>
 </div>
 </div>
@@ -1254,40 +1255,131 @@ function handleSubmitFile(blob,filename,mimeType){
 /* ===== EXCEL EXPORT ===== */
 function shareFile(){
   var btn=document.getElementById('btnShareFile');
-  if(!roundData){if(btn)btn.textContent='\u26A0 No data';return;}
-  if(btn){btn.textContent='Preparing...';btn.style.opacity='0.7';}
-  // Regenerate file fresh at tap time (ensures valid blob + user gesture context)
+  if(!roundData){if(btn)btn.textContent='No data';return;}
+  // Generate file
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
   var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});
   var fname=baseName+'.xls';
-  try{
-    var file=new File([blob],fname,{type:'application/vnd.ms-excel',lastModified:Date.now()});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      if(btn)btn.textContent='Opening share...';
-      navigator.share({files:[file],title:fname,text:lastSubmitSummary||''}).then(function(){
-        if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
-      }).catch(function(e){
-        if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
-      });
-      return;
-    }
-  }catch(e){}
-  // File share failed — try text only
-  if(navigator.share){
-    try{
-      if(btn)btn.textContent='Sharing summary...';
-      navigator.share({title:fname,text:lastSubmitSummary||'Daily Rounds Report'}).then(function(){
-        if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
-      }).catch(function(e){
-        if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
-      });
-      return;
-    }catch(e){}
-  }
-  // Nothing worked — download + email
+  // Download file first so user has it
   downloadBlob(blob,fname);
-  if(btn){btn.textContent='\uD83D\uDCE5 Downloaded';btn.style.opacity='1';}
+  // Replace share button with Slack + Email options
+  var parent=btn.parentNode;
+  btn.style.display='none';
+  var actions=document.getElementById('shareActions');
+  if(actions)actions.remove();
+  actions=document.createElement('div');actions.id='shareActions';
+  actions.innerHTML='<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:10px">\u2705 Report downloaded: '+fname+'</div>'
+    +'<button id="btnShareSlack" style="width:100%;padding:16px;background:#4A154B;color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;min-height:56px;margin-bottom:8px" onclick="shareToSlack()">\uD83D\uDCAC Share to Slack</button>'
+    +'<button id="btnShareEmail" style="width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;min-height:56px;margin-bottom:8px" onclick="shareToEmail()">\u2709 Share via Email</button>'
+    +'<button style="width:100%;padding:12px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;cursor:pointer" onclick="downloadFileAgain()">\uD83D\uDCE5 Download Again</button>';
+  parent.insertBefore(actions,btn.nextSibling);
+}
+function shareToSlack(){
+  var btn=document.getElementById('btnShareSlack');
+  var text=lastSubmitSummary||'Daily Rounds Report';
+  // Copy to clipboard
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      if(btn)btn.textContent='\u2705 Copied! Opening Slack...';
+      showToast('Summary copied — paste into your Slack channel');
+      setTimeout(function(){window.open('slack://open','_blank');},500);
+    }).catch(function(){
+      fallbackCopy(text);
+      if(btn)btn.textContent='\u2705 Copied! Opening Slack...';
+      setTimeout(function(){window.open('slack://open','_blank');},500);
+    });
+  }else{
+    fallbackCopy(text);
+    if(btn)btn.textContent='\u2705 Copied! Opening Slack...';
+    setTimeout(function(){window.open('slack://open','_blank');},500);
+  }
+}
+function shareToEmail(){
+  var subject=encodeURIComponent(roundData.building+' Daily Rounds - '+roundData.date);
+  var body=encodeURIComponent((lastSubmitSummary||'Daily Rounds Report')+'\n\n(Report file attached separately)');
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+}
+
+
+function copySummaryToClipboard(){
+  var text=lastSubmitSummary||'No summary available';
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){showToast('Summary copied! Paste into Slack or email.');}).catch(function(){fallbackCopy(text);});
+  }else{fallbackCopy(text);}
+}
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('Summary copied!');}catch(e){showToast('Could not copy — long press to select text');}
+  document.body.removeChild(ta);
+}
+function diagnoseShare(){
+  var results=[];
+  var log=function(label,val){results.push('<div style="margin:4px 0"><strong>'+label+':</strong> <span style="color:'+(val==='YES'||val==='true'?'var(--green)':'var(--red)')+'">'+val+'</span></div>');};
+  // 1. Check navigator.share exists
+  log('navigator.share exists', typeof navigator.share==='function'?'YES':'NO');
+  // 2. Check navigator.canShare exists
+  log('navigator.canShare exists', typeof navigator.canShare==='function'?'YES':'NO');
+  // 3. Check if we can create a File
+  var fileOk=false;var fileErr='';
+  try{var f=new File(['test'],'test.txt',{type:'text/plain'});fileOk=true;}catch(e){fileErr=e.message;}
+  log('File() constructor works', fileOk?'YES':'NO — '+fileErr);
+  // 4. Check if we can create a Blob
+  var blobOk=false;
+  try{var b=new Blob(['test'],{type:'text/plain'});blobOk=true;}catch(e){}
+  log('Blob() constructor works', blobOk?'YES':'NO');
+  // 5. Check secure context
+  log('isSecureContext', window.isSecureContext?'YES':'NO');
+  // 6. Check if canShare with text
+  if(navigator.canShare){
+    try{log('canShare({text})', navigator.canShare({text:'test'})?'YES':'NO');}catch(e){log('canShare({text})', 'ERROR: '+e.message);}
+  }
+  // 7. Check if canShare with file
+  if(navigator.canShare){
+    try{
+      var tf=new File(['test'],'test.txt',{type:'text/plain'});
+      log('canShare({files:[txt]})', navigator.canShare({files:[tf]})?'YES':'NO');
+    }catch(e){log('canShare({files:[txt]})', 'ERROR: '+e.message);}
+    try{
+      var xf=new File(['test'],'test.xls',{type:'application/vnd.ms-excel'});
+      log('canShare({files:[xls]})', navigator.canShare({files:[xf]})?'YES':'NO');
+    }catch(e){log('canShare({files:[xls]})', 'ERROR: '+e.message);}
+  }
+  // 8. User agent
+  log('User Agent', navigator.userAgent.substring(0,120));
+  // 9. Try an actual share with just text
+  results.push('<div style="margin:8px 0;border-top:1px solid var(--border);padding-top:8px"><strong>Live test — sharing text only...</strong></div>');
+  // Show results so far
+  var panel=document.getElementById('diagPanel');
+  if(!panel){panel=document.createElement('div');panel.id='diagPanel';panel.style.cssText='margin-top:12px;background:var(--surface);border:1px solid var(--amber);border-radius:var(--radius);padding:14px;font-size:12px;font-family:monospace;max-height:400px;overflow-y:auto';
+    var dc=document.querySelector('.done-content');if(dc)dc.appendChild(panel);
+  }
+  panel.innerHTML=results.join('');
+  // Now try actual share
+  if(navigator.share){
+    navigator.share({title:'Test',text:'SBN Daily Rounds test share'}).then(function(){
+      panel.innerHTML+='<div style="color:var(--green)"><strong>TEXT SHARE: SUCCESS</strong></div>';
+    }).catch(function(e){
+      panel.innerHTML+='<div style="color:var(--red)"><strong>TEXT SHARE FAILED: '+e.name+' — '+e.message+'</strong></div>';
+      // Try file share too
+      try{
+        var tf=new File(['test content'],'test.txt',{type:'text/plain'});
+        navigator.share({files:[tf],title:'Test',text:'test'}).then(function(){
+          panel.innerHTML+='<div style="color:var(--green)"><strong>FILE SHARE: SUCCESS</strong></div>';
+        }).catch(function(e2){
+          panel.innerHTML+='<div style="color:var(--red)"><strong>FILE SHARE FAILED: '+e2.name+' — '+e2.message+'</strong></div>';
+        });
+      }catch(e3){panel.innerHTML+='<div style="color:var(--red)"><strong>FILE SHARE ERROR: '+e3.message+'</strong></div>';}
+    });
+  }else{panel.innerHTML+='<div style="color:var(--red)"><strong>navigator.share NOT AVAILABLE</strong></div>';}
+}
+
+function downloadFileAgain(){
+  var excelHtml=generateExcel();
+  var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
+  downloadBlob(new Blob([excelHtml],{type:'application/vnd.ms-excel'}),baseName+'.xls');
+  showToast('File downloaded again');
 }
 
 function downloadAgain(){if(lastSubmitBlob)downloadBlob(lastSubmitBlob,lastSubmitFilename);}
@@ -1630,4 +1722,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v2.8 -->
+<!-- v3.0-diag -->
