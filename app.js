@@ -433,7 +433,10 @@ html+='</div></div></div>';
   } else {
     var okLabel=sec.type==='exp_unexp'?'Expected':'OK';
     var issueLabel=sec.type==='exp_unexp'?'Unexpected':'Issue';
-    html+='<div class="item-list">';
+    
+    // Show tap hint for non-touch users
+    if(!('ontouchstart' in window)){html+='<div style="background:rgba(6,182,212,0.1);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--accent);text-align:center"><strong>Desktop Mode:</strong> Click items to cycle OK \u2192 Issue \u2192 Clear</div>';}
+html+='<div class="item-list">';
     var sCols=sec.cols||[];for(var idx=0;idx<sCols.length;idx++){
       var item=secData.items[idx];var statusCls='';var statusText='';
       if(item.status==='ok'||item.status==='expected'){statusCls='status-ok';statusText=okLabel;}
@@ -520,7 +523,7 @@ function attachSwipe(card,sIdx,iIdx,type){
     card.querySelector('.swipe-bg-ok').style.display='none';
     card.querySelector('.swipe-bg-issue').style.display='none';
   });
-  card.addEventListener('click',function(e){if(swiping)return;if(e.target.closest('.issue-detail')||e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;var item=roundData.sections[sIdx].items[iIdx];if(item.status){item.status='';item.note='';item.noteLocked=false;renderWalkthrough();}});
+  card.addEventListener('click',function(e){if(swiping)return;if(e.target.closest('.issue-detail')||e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;var item=roundData.sections[sIdx].items[iIdx];var okSt=type==='exp_unexp'?'expected':'ok';var issueSt=type==='exp_unexp'?'unexpected':'issue';if(!item.status){item.status=okSt;}else if(item.status===okSt){item.status=issueSt;}else{item.status='';item.note='';item.noteLocked=false;}checkSectionComplete(sIdx);renderWalkthrough();});
 }
 
 function markItem(sIdx,iIdx,status){roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();}
