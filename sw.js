@@ -1,10 +1,11 @@
-var CACHE_NAME = 'sbn-rounds-v4';
+var CACHE_NAME = 'sbn-rounds-v5';
 var urlsToCache = [
   '/SBN-Daily-Rounds/',
   '/SBN-Daily-Rounds/index.html',
   '/SBN-Daily-Rounds/manifest.json',
   '/SBN-Daily-Rounds/icon-192.png',
-  '/SBN-Daily-Rounds/icon-512.png'
+  '/SBN-Daily-Rounds/icon-512.png',
+  '/SBN-Daily-Rounds/app.js'
 ];
 
 self.addEventListener('install', function(event) {
