@@ -556,7 +556,7 @@ function initStartScreen(){
   for(var i=0;i<buildings.length;i++)html+='<button class="building-btn" data-bldg="'+buildings[i]+'">'+buildings[i]+'</button>';
   grid.innerHTML=html;
   var btns=grid.querySelectorAll('.building-btn');
-  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();});
+  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();loadRecentRounds(this.getAttribute('data-bldg'));});
   var sg=document.getElementById('shiftGrid');
   sg.innerHTML='<button class="shift-btn" data-shift="Days">Days</button><button class="shift-btn" data-shift="Nights">Nights</button>';
   var sb=sg.querySelectorAll('.shift-btn');
@@ -1049,10 +1049,10 @@ function generateExcel(){
 }
 
 /* ===== RECENT ROUNDS ===== */
-function loadRecentRounds(){
+function loadRecentRounds(filterBuilding){
   tryClipboardAutoFill();
   if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
-  var buildings=['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
+  var buildings=filterBuilding?[filterBuilding]:['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
   var allRounds=[];var pending=0;var today=new Date();
   for(var d=0;d<7;d++){var dt=new Date(today);dt.setDate(dt.getDate()-d);
     var ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
