@@ -1257,16 +1257,63 @@ function shareFile(){
   var btn=document.getElementById('btnShareFile');
   if(!roundData){if(btn)btn.textContent='No data';return;}
   if(btn){btn.textContent='Opening share...';btn.style.opacity='0.7';}
-  var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
-  var file=new File([excelHtml],baseName+'.html',{type:'text/html',lastModified:Date.now()});
-  navigator.share({files:[file],title:baseName,text:lastSubmitSummary||''}).then(function(){
-    if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
-  }).catch(function(e){
-    if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
-    if(e.name!=='AbortError')showToast('Share error: '+e.name+' \u2014 '+e.message);
-  });
+  // Generate CSV for sharing (universally accepted by Slack, Gmail, etc)
+  var csv=generateCSV();
+  var csvFile=new File([csv],baseName+'.csv',{type:'text/csv',lastModified:Date.now()});
+  // Try CSV file share first
+  if(navigator.canShare&&navigator.canShare({files:[csvFile]})){
+    navigator.share({files:[csvFile],title:baseName,text:lastSubmitSummary||''}).then(function(){
+      if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
+    }).catch(function(e){
+      if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+      if(e.name!=='AbortError')showToast('Share error: '+e.message);
+    });
+    return;
+  }
+  // Fall back to text share
+  if(navigator.share){
+    navigator.share({title:baseName,text:lastSubmitSummary||'Daily Rounds Report'}).then(function(){
+      if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
+    }).catch(function(e){
+      if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+    });
+    return;
+  }
+  if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+  showToast('Share not available');
 }
+function generateCSV(){
+  var lines=[];
+  lines.push('SBN DAILY ROUNDS REPORT');
+  lines.push('Building,'+roundData.building);
+  lines.push('Date,'+roundData.date);
+  lines.push('Alias,'+roundData.technician);
+  lines.push('Shift,'+roundData.shift);
+  if(roundData.ticketUrl)lines.push('Daily Ticket,'+roundData.ticketUrl);
+  lines.push('');
+  lines.push('Section,Item,Status,Note,Photos');
+  roundData.sections.forEach(function(sec){
+    if(!sec.items||sec.items.length===0){
+      lines.push(csvEsc(sec.name)+',(notes only),,'+csvEsc(sec.notes||'')+',-');
+    }else{
+      sec.items.forEach(function(item){
+        if(!item)return;
+        lines.push(csvEsc(sec.name)+','+csvEsc(item.name||'-')+','+csvEsc(item.status||'-')+','+csvEsc(item.note||'')+','+(item.photos||0));
+      });
+      if(sec.notes)lines.push(csvEsc(sec.name)+',(section notes),,'+csvEsc(sec.notes)+',-');
+    }
+  });
+  lines.push('');
+  var totalItems=0,okCount=0,issueCount=0;
+  roundData.sections.forEach(function(sec){(sec.items||[]).forEach(function(item){if(!item)return;totalItems++;if(item.status==='ok'||item.status==='expected')okCount++;if(item.status==='issue'||item.status==='unexpected')issueCount++;});});
+  lines.push('SUMMARY');
+  lines.push('Total Items,'+totalItems);
+  lines.push('OK,'+okCount);
+  lines.push('Issues,'+issueCount);
+  return lines.join('\r\n');
+}
+function csvEsc(val){val=String(val||'');if(val.indexOf(',')>=0||val.indexOf('"')>=0||val.indexOf('\n')>=0)return '"'+val.replace(/"/g,'""')+'"';return val;}
 
 function shareToSlack(){
   var btn=document.getElementById('btnShareSlack');
@@ -1715,4 +1762,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.2 -->
+<!-- v3.3 -->
