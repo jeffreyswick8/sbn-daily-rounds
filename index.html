@@ -1253,17 +1253,39 @@ function handleSubmitFile(blob,filename,mimeType){
 
 /* ===== EXCEL EXPORT ===== */
 function shareFile(){
-  if(!lastSubmitBlob)return;
-  // Try file sharing first, fall back to text-only sharing, then download
-  var canShareFiles=false;
-  try{var f=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});canShareFiles=navigator.canShare&&navigator.canShare({files:[f]});}catch(e){}
-  if(canShareFiles){
-    try{var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
-    navigator.share({text:lastSubmitSummary,files:[file]}).catch(function(){});}catch(e){}
-  } else if(navigator.share){
-    navigator.share({title:lastSubmitFilename,text:lastSubmitSummary}).catch(function(){});
-  } else {downloadBlob(lastSubmitBlob,lastSubmitFilename);}
+  var btn=document.getElementById('btnShareFile');
+  if(!lastSubmitBlob){if(btn)btn.textContent='\u26A0 No file to share';return;}
+  if(btn){btn.textContent='Opening share...';btn.style.opacity='0.7';}
+  try{
+    var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:lastSubmitFilename,text:lastSubmitSummary}).then(function(){
+        if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
+      }).catch(function(e){
+        if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+      });
+      return;
+    }
+  }catch(e){}
+  // File share not supported — try text-only share
+  if(navigator.share){
+    try{
+      navigator.share({title:lastSubmitFilename,text:lastSubmitSummary}).then(function(){
+        if(btn){btn.textContent='\u2705 Summary Shared!';btn.style.opacity='1';}
+      }).catch(function(e){
+        if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+      });
+      return;
+    }catch(e){}
+  }
+  // Neither worked — download + mailto
+  downloadBlob(lastSubmitBlob,lastSubmitFilename);
+  var subject=encodeURIComponent(lastSubmitFilename);
+  var body=encodeURIComponent(lastSubmitSummary);
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+  if(btn){btn.textContent='\uD83D\uDCE5 Downloaded — attach to email';btn.style.opacity='1';}
 }
+
 function downloadAgain(){if(lastSubmitBlob)downloadBlob(lastSubmitBlob,lastSubmitFilename);}
 function startHandoffFromDone(){
   var btn=document.querySelector('.btn-handoff');
@@ -1604,4 +1626,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v2.5 -->
+<!-- v2.7 -->
