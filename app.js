@@ -16,7 +16,7 @@ var defaultSections = [
   {name:'Fire Riser Room',desc:'Verify all valves are in correct position, no leakages, no unexpected alarms on FCP. Check nitrogen generator, air compressor, and all zone pressures. See Reference Values for specific ranges.',cols:['Valves','Pressure','FACP','Nitrogen Gen'],type:'exp_unexp',cheatSheet:'Sprinkler heads: 175-200°F activation | Line pressure: 140-150 PSI (site-specific) | Nitrogen generator: 20-62 PSI | Air compressor: 120-175 PSI | Zone water pressure: 125-150 PSI | Zone air pressure: 15-25 PSI | All valves: Correct position per tag | FCP: No alarms | No leaks'},
   {name:'IW Room',desc:'Check all equipment is in auto and free of alarms. Inspect for leaks and debris. Verify pump skids, MIOX system, and IW tank levels. See Reference Values for specific ranges.',cols:['Pump Skid 1','Pump Skid 2','Miox Skid','Tanks'],type:'exp_unexp',cheatSheet:'Pump pressure setpoint: 47 PSI (live supply ~37 PSI) | Tank levels: ~80% normal | Tank low alarm: 70% | Tank overflow alarm: 102% | Source loss alarm: <20.3 PSI | Chlorine target: 2 ppm TCR | All pumps: AUTO, no alarms | No leaks or debris'},
   {name:'Roof',desc:'Inspect exhaust fans, RTUs, lightning protection grid, and lighting. Verify equipment functioning, no abnormal noise or leaks. See Reference Values for access requirements.',cols:['EFs','RTU','LPG','Lighting'],type:'ok_issue',cheatSheet:'Exhaust Fans: Running, no vibration, ~26-33% speed command | RTUs: Normal operation | Lightning protection: Intact | Lighting: Functional | Access: Mon-Fri only, clear weather, 2 personnel required'},
-  {name:'Data Hall',desc:'Walk both data halls checking PDCs, racks, and hot aisle containment. Verify VESDA and MaxCool panels. See Reference Values for specific thresholds.',cols:['DH1 PDCs','DH1 Racks','DH1 HAC','DH1 VESDA','DH1 MaxCool','DH2 PDCs','DH2 Racks','DH2 HAC','DH2 VESDA','DH2 MaxCool'],type:'ok_issue',cheatSheet:'Cold aisle nominal: 85°F | Cold aisle WARNING high: >92°F | Cold aisle ALARM high: >95°F | Cold aisle WARNING low: <55°F | Server throttle: 104-113°F | Server shutdown: >113°F | Hot aisle max: 130°F | MaxCool Stage 1: 97°F trigger, 94°F reset | MaxCool pressure: +/-0.6 IWC | PDC: Both sources available | Catcher load: <4 Amps | VESDA: No alarm | Humidity: <80% RH | Escalation: 80-85°F supervisor, 85-90°F FM/CE, 90-95°F CM, 95°F+ Stage 2, 104°F+ corporate'}
+  {name:'Data Hall',desc:'Walk both data halls checking PDCs, racks, and hot aisle containment. Verify VESDA and MaxCool panels. See Reference Values for specific thresholds.',cols:['1.1 PDCs','1.1 Racks','1.1 HAC','1.2 PDCs','1.2 Racks','1.2 HAC','1.3 PDCs','1.3 Racks','1.3 HAC','1.4 PDCs','1.4 Racks','1.4 HAC','1.5 PDCs','1.5 Racks','1.5 HAC','1.6 PDCs','1.6 Racks','1.6 HAC','2.1 PDCs','2.1 Racks','2.1 HAC','2.2 PDCs','2.2 Racks','2.2 HAC','2.3 PDCs','2.3 Racks','2.3 HAC','2.4 PDCs','2.4 Racks','2.4 HAC','2.5 PDCs','2.5 Racks','2.5 HAC','2.6 PDCs','2.6 Racks','2.6 HAC'],type:'ok_issue',cheatSheet:'Cold aisle nominal: 85°F | Cold aisle WARNING high: >92°F | Cold aisle ALARM high: >95°F | Cold aisle WARNING low: <55°F | Server throttle: 104-113°F | Server shutdown: >113°F | Hot aisle max: 130°F | MaxCool Stage 1: 97°F trigger, 94°F reset | MaxCool pressure: +/-0.6 IWC | PDC: Both sources available | Catcher load: <4 Amps | VESDA: No alarm | Humidity: <80% RH | Escalation: 80-85°F supervisor, 85-90°F FM/CE, 90-95°F CM, 95°F+ Stage 2, 104°F+ corporate'}
 ];
 var activeSections=defaultSections;
 
@@ -169,13 +169,15 @@ function beginRounds(){
       if(loaded)return;loaded=true;clearTimeout(timeout);
       try{var val=snap.val();
       if(val&&Array.isArray(val)&&val.length>0){
-        // Ensure all sections have cols array + merge cheatSheet from defaults
+        // Always sync cols, type, desc, cheatSheet from code defaults (latest values win)
         for(var fi=0;fi<val.length;fi++){
-          if(!val[fi].cols)val[fi].cols=[];if(!val[fi].type)val[fi].type='ok_issue';if(!val[fi].desc)val[fi].desc='';
-          // Merge cheatSheet and desc from defaultSections (always use latest code values)
           if(fi<defaultSections.length){
+            val[fi].cols=defaultSections[fi].cols||[];
+            val[fi].type=defaultSections[fi].type||'ok_issue';
+            val[fi].desc=defaultSections[fi].desc||'';
             val[fi].cheatSheet=defaultSections[fi].cheatSheet||'';
-            if(!val[fi].desc&&defaultSections[fi].desc)val[fi].desc=defaultSections[fi].desc;
+          }else{
+            if(!val[fi].cols)val[fi].cols=[];if(!val[fi].type)val[fi].type='ok_issue';if(!val[fi].desc)val[fi].desc='';
           }
         }
         activeSections=val;
@@ -881,8 +883,24 @@ function loadRecentRounds(filterBuilding){
     })(buildings[b],ds);}}
 }
 function renderRecentRounds(rounds){
-  if(rounds.length===0){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No recent rounds found</div>';return;}
+  var listEl=document.getElementById('recentList');
+  if(rounds.length===0){listEl.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No recent rounds found</div>';return;}
   rounds.sort(function(a,b){return(b.startTime||0)-(a.startTime||0);});var html='';
+  // Show in-progress rounds prominently at top
+  var inProgress=rounds.filter(function(r){return r.status==='in_progress';});
+  if(inProgress.length>0){
+    html+='<div style="margin-bottom:12px">';
+    for(var ip=0;ip<inProgress.length;ip++){
+      var r=inProgress[ip];
+      html+='<div class="recent-card" style="border:2px solid var(--amber);background:rgba(245,158,11,0.08)">';
+      html+='<div class="recent-info"><div class="r-bldg" style="color:var(--amber)">&#128260; '+(r.building||'?')+' \u2014 '+(r.date||'')+' (IN PROGRESS)</div>';
+      html+='<div class="r-meta">'+(r.technician||'')+' | '+(r.shift||'')+'</div></div>';
+      html+='<div class="recent-actions">';
+      html+='<button class="btn-edit" style="background:var(--amber);color:#000" onclick="editRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')">&#9654; Resume</button>';
+      html+='</div></div>';
+    }
+    html+='</div>';
+  }
   for(var i=0;i<Math.min(rounds.length,20);i++){
     var r=rounds[i];var statusBadge=r.status==='completed'?'<span style="color:var(--green)">&#9989; Complete</span>':'<span style="color:var(--accent)">&#128260; In Progress</span>';
     html+='<div class="recent-card"><div class="recent-info"><div class="r-bldg">'+(r.building||'?')+' &mdash; '+(r.date||'')+'</div>';
@@ -897,10 +915,17 @@ function renderRecentRounds(rounds){
 }
 function editRound(fbKey){
   if(!db){showToast('Cannot edit offline');return;}
+  var currentAlias=document.getElementById('techName')?document.getElementById('techName').value.trim():'';
+
   db.ref(fbKey).once('value',function(snap){
     try{
     var data=snap.val();if(!data){showToast('Round not found');return;}
-    roundData=data;isEditing=true;editKey=fbKey;currentSection=0;photoStore={};noteEditState={};
+    roundData=data;
+    // Warn if editing another tech's walk
+    if(currentAlias&&data.technician&&currentAlias.toLowerCase()!==data.technician.toLowerCase()){
+      if(!confirm('This walk belongs to '+data.technician+'. Open in view mode? (Changes will save under their name)'))return;
+    }
+    isEditing=true;editKey=fbKey;currentSection=0;photoStore={};noteEditState={};
     activeBuilding=roundData.building;
     // Load building sections before opening (handles different section configs)
     db.ref('config/sections/'+activeBuilding).once('value',function(secSnap){
