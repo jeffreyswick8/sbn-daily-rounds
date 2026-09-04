@@ -433,8 +433,12 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="done-content">
 <div class="done-icon">&#9989;</div>
 <div class="done-title">Rounds Submitted!</div>
-<div class="done-msg">Your round data has been saved and the report is ready.<br>On mobile: use the share sheet to send the file.<br>On tablet: attach the downloaded file to your SIM ticket.</div>
+<div class="done-msg" id="doneMsg">Your round data has been saved and the report is ready.</div>
+<div id="doneActions" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:400px;margin-top:16px">
+<button class="btn-new-round" id="btnShareFile" style="display:none;background:var(--accent);color:#000" onclick="shareLastFile()">&#128228; Share Round Report</button>
+<button class="btn-new-round" id="btnDownloadFile" style="display:none;background:var(--card);color:var(--text);border:1px solid var(--border)" onclick="downloadLastFile()">&#128229; Download File</button>
 <button class="btn-new-round" onclick="resetApp()">Start New Round</button>
+</div>
 </div>
 </div>
 
@@ -992,54 +996,81 @@ function submitRounds(){
   }catch(err){alert('Submit error: '+err.message);}
 }
 
+var lastSubmitBlob=null;var lastSubmitFilename='';var lastSubmitMime='';var lastSubmitSummary='';
+
 function handleSubmitFile(blob,filename,mimeType){
   // Save to Firebase first
   var fbKey='rounds/'+roundData.building+'/'+roundData.date+'/'+Date.now();
   if(isEditing&&editKey)fbKey=editKey;
   saveToFirebase(roundData,fbKey);saveFindingsFromRound(roundData,fbKey);
 
-  // Build summary text for sharing
+  // Store file for later sharing/downloading from Done screen
+  lastSubmitBlob=blob;lastSubmitFilename=filename;lastSubmitMime=mimeType;
+
+  // Build summary text
   var totalItems=0,okCount=0,issueCount=0;
   roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(!item)return;totalItems++;if(item.status==='ok'||item.status==='expected')okCount++;if(item.status==='issue'||item.status==='unexpected')issueCount++;});});
-  var summary=roundData.building+' Daily Rounds\n';
-  summary+='Date: '+roundData.date+'\n';
-  summary+='Alias: '+roundData.technician+'\n';
-  summary+='Shift: '+roundData.shift+'\n\n';
-  summary+='Summary: '+okCount+'/'+totalItems+' OK, '+issueCount+' issues\n';
-  if(issueCount>0){summary+='\nISSUES:\n';roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(item&&(item.status==='issue'||item.status==='unexpected'))summary+='- '+sec.name+' > '+(item.name||'Unknown')+': '+(item.note||'')+'\n';});});}
-  if(roundData.ticketUrl)summary+='\nDaily Ticket: '+roundData.ticketUrl;
+  lastSubmitSummary=roundData.building+' Daily Rounds\n';
+  lastSubmitSummary+='Date: '+roundData.date+'\n';
+  lastSubmitSummary+='Alias: '+roundData.technician+'\n';
+  lastSubmitSummary+='Shift: '+roundData.shift+'\n\n';
+  lastSubmitSummary+='Summary: '+okCount+'/'+totalItems+' OK, '+issueCount+' issues\n';
+  if(issueCount>0){lastSubmitSummary+='\nISSUES:\n';roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(item&&(item.status==='issue'||item.status==='unexpected'))lastSubmitSummary+='- '+sec.name+' > '+(item.name||'Unknown')+': '+(item.note||'')+'\n';});});}
+  if(roundData.ticketUrl)lastSubmitSummary+='\nDaily Ticket: '+roundData.ticketUrl;
 
-  // Try native share (works on Android Chrome + iPhone Safari)
-  var file=new File([blob],filename,{type:mimeType});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){
-    navigator.share({
-      title:roundData.building+' Daily Rounds - '+roundData.date,
-      text:summary,
-      files:[file]
-    }).then(function(){
-      showToast('Shared successfully!');
-    }).catch(function(err){
-      if(err.name!=='AbortError'){
-        // Share failed (not cancelled) - fall back to download
-        downloadBlob(blob,filename);
-        showToast('Share failed - file downloaded instead');
-      }
-    });
+  // Check if share is available
+  var canShareFiles=false;
+  try{var testFile=new File([blob],filename,{type:mimeType});canShareFiles=navigator.canShare&&navigator.canShare({files:[testFile]});}catch(e){canShareFiles=false;}
+
+  // Show Done screen with appropriate buttons
+  showScreen('doneScreen');
+  var shareBtn=document.getElementById('btnShareFile');
+  var dlBtn=document.getElementById('btnDownloadFile');
+  var msg=document.getElementById('doneMsg');
+
+  if(canShareFiles){
+    // Phone - show Share button prominently
+    shareBtn.style.display='block';
+    dlBtn.style.display='block';
+    msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';
+    showToast('Rounds submitted!');
   }else{
-    // No native share support (Windows tablet, older browsers)
-    // Download the file
+    // Tablet/desktop - auto-download and show ticket/email options
+    shareBtn.style.display='none';
+    dlBtn.style.display='block';
+    dlBtn.textContent='\ud83d\udce5 Download Again';
     downloadBlob(blob,filename);
     // Open SIM ticket if provided
     var ticketUrl=roundData.ticketUrl;
     if(ticketUrl){if(!/^https?:\/\//.test(ticketUrl)){ticketUrl=ticketUrl.replace(/^tt\//,'');ticketUrl='https://t.corp.amazon.com/'+ticketUrl;}window.open(ticketUrl,'_blank');}
     // Open pre-filled email
     var mailSubject=roundData.building+' Daily Rounds - '+roundData.date+' - '+roundData.shift;
-    var mailBody=summary+'\n\n(File attached separately)';
+    var mailBody=lastSubmitSummary+'\n\n(File attached separately)';
     var mailtoUrl='mailto:?subject='+encodeURIComponent(mailSubject)+'&body='+encodeURIComponent(mailBody);
     try{window.location.href=mailtoUrl;}catch(e){}
-    showToast('File downloaded - attach to SIM ticket');
+    msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';
+    showToast('File downloaded!');
   }
-  showScreen('doneScreen');
+}
+
+function shareLastFile(){
+  if(!lastSubmitBlob)return;
+  try{
+    var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
+    navigator.share({
+      title:lastSubmitFilename.replace(/[._]/g,' '),
+      text:lastSubmitSummary,
+      files:[file]
+    }).then(function(){showToast('Shared successfully!');}).catch(function(err){
+      if(err.name!=='AbortError'){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share failed — file downloaded instead');}
+    });
+  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share unavailable — file downloaded');}
+}
+
+function downloadLastFile(){
+  if(!lastSubmitBlob)return;
+  downloadBlob(lastSubmitBlob,lastSubmitFilename);
+  showToast('File downloaded!');
 }
 
 function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
