@@ -1729,7 +1729,7 @@ function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(fu
 
 /* ===== WINDOWS TABLET KEYBOARD FIX ===== */
 (function(){if('virtualKeyboard' in navigator){navigator.virtualKeyboard.overlaysContent=true;}
-  document.addEventListener('focusin',function(e){var tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}e.target.setAttribute('enterkeyhint','done');}});
+  document.addEventListener('focusin',function(e){var tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}e.target.setAttribute('enterkeyhint','done');var el=e.target;setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},350);}});
 })();
 
 /* ===== SERVICE WORKER ===== */
@@ -1762,4 +1762,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.3 -->
+<!-- v3.4 -->
