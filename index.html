@@ -389,7 +389,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div id="clipboardHint" style="display:none;font-size:12px;color:var(--green);margin:-8px 0 8px 4px">&#9989; Auto-detected from clipboard</div>
 <div class="start-label">Date</div>
 <input class="start-input" type="date" id="roundDate">
-<button class="btn-begin" id="btnBegin" disabled onclick="beginRounds()">BEGIN ROUNDS</button>
+<button class="btn-begin" id="btnBegin" onclick="beginRounds()">BEGIN ROUNDS</button>
 <button class="btn-begin" style="background:var(--card);color:var(--accent);border:1px solid var(--accent);margin-top:8px" onclick="openComplianceDirect()">&#128202; Campus Compliance Dashboard</button>
 <div class="recent-section">
 <div class="start-label">Recent Rounds</div>
@@ -511,6 +511,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 
 </div>
 <script>
+window.onerror=function(msg,url,line,col,err){var d=document.createElement('div');d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;font-size:13px;z-index:9999;font-family:monospace';d.textContent='JS Error: '+msg+' (line '+line+')';document.body.appendChild(d);setTimeout(function(){d.remove();},10000);};
 /* ===== DEFAULT SECTIONS DATA ===== */
 var defaultSections = [
   {name:'Office Area',desc:'Check all sub-zones: Bullpen, MDF Room, MMR (if applicable), Breakroom, Conference Rooms, Electrical Closet, Corridors, ACS/MaxCool panels, Fire Alarm Panel. Verify systems are free of unexpected alarms, doors are secured, and EPMS is operational.',cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel'],type:'ok_issue'},
@@ -644,28 +645,30 @@ function initStartScreen(){
 }
 function getSelectedBuilding(){var s=document.querySelector('.building-btn.selected');return s?s.getAttribute('data-bldg'):'';}
 function getSelectedShift(){var s=document.querySelector('.shift-btn.selected');return s?s.getAttribute('data-shift'):'';}
-function checkReady(){var ok=getSelectedBuilding()&&document.getElementById('techName').value.trim()&&getSelectedShift();document.getElementById('btnBegin').disabled=!ok;}
+function checkReady(){var ok=getSelectedBuilding()&&document.getElementById('techName').value.trim()&&getSelectedShift();var btn=document.getElementById('btnBegin');btn.style.opacity=ok?'1':'0.5';}
 
 function beginRounds(){
-  currentSection=0;photoStore={};noteEditState={};
-  var selectedBldg=getSelectedBuilding();
-  if(!selectedBldg){showToast('Please select a building');return;}
-  if(!document.getElementById('techName').value.trim()){showToast('Please enter your alias');return;}
-  if(!getSelectedShift()){showToast('Please select a shift');return;}
-  // Show loading state
+  try{
   var btn=document.getElementById('btnBegin');
-  var origText=btn.textContent;btn.textContent='LOADING...';btn.disabled=true;
+  var selectedBldg=getSelectedBuilding();
+  if(!selectedBldg){btn.textContent='\u26A0 SELECT A BUILDING';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
+  if(!document.getElementById('techName').value.trim()){btn.textContent='\u26A0 ENTER YOUR ALIAS';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
+  if(!getSelectedShift()){btn.textContent='\u26A0 SELECT A SHIFT';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
+  currentSection=0;photoStore={};noteEditState={};
+  btn.textContent='LOADING...';btn.style.background='var(--amber)';btn.style.color='#000';
   var loaded=false;
   if(db){
-    var timeout=setTimeout(function(){if(!loaded){loaded=true;activeSections=defaultSections;startRoundsWithSections(selectedBldg);btn.textContent=origText;btn.disabled=false;}},5000);
+    var timeout=setTimeout(function(){if(!loaded){loaded=true;activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);}},4000);
     db.ref('config/sections/'+selectedBldg).once('value',function(snap){
       if(loaded)return;loaded=true;clearTimeout(timeout);
-      var val=snap.val();
+      try{var val=snap.val();
       if(val&&Array.isArray(val)&&val.length>0){activeSections=val;}
       else{activeSections=defaultSections;db.ref('config/sections/'+selectedBldg).set(defaultSections);}
-      btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);
-    },function(){if(loaded)return;loaded=true;clearTimeout(timeout);activeSections=defaultSections;btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);});
-  }else{activeSections=defaultSections;btn.textContent=origText;btn.disabled=false;startRoundsWithSections(selectedBldg);}
+      }catch(e){activeSections=defaultSections;}
+      btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);
+    },function(){if(loaded)return;loaded=true;clearTimeout(timeout);activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);});
+  }else{activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);}
+  }catch(err){document.getElementById('btnBegin').textContent='ERROR: '+err.message;document.getElementById('btnBegin').style.background='var(--red)';}
 }
 function startRoundsWithSections(selectedBldg){
   var secs=[];
