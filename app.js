@@ -64,7 +64,7 @@ function queueOfflineWrite(action,key,data){
   try{var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
   queue.push({action:action,key:key,data:data,timestamp:Date.now()});
   localStorage.setItem('sbn-rounds-offline-queue',JSON.stringify(queue));
-  updateOfflineBadge();showToast('Saved offline â€” will sync when connected');}catch(e){}
+  updateOfflineBadge();showToast('Saved offline — will sync when connected');}catch(e){}
 }
 function syncOfflineQueue(){
   if(!db)return;
@@ -179,7 +179,7 @@ function startRoundsWithSections(selectedBldg){
   }
   roundData={building:selectedBldg,technician:document.getElementById('techName').value.trim(),shift:getSelectedShift(),date:document.getElementById('roundDate').value||todayStr(),ticketUrl:document.getElementById('ticketUrl').value.trim(),startTime:Date.now(),endTime:null,status:'in_progress',sections:secs,lastModified:Date.now()};
   activeBuilding=roundData.building;
-  document.getElementById('headerSub').textContent=activeBuilding+' â€” '+roundData.shift+' â€” '+roundData.technician;
+  document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;
   showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
   switchMainTab('zones');
   }catch(e){alert('startRounds error: '+e.message);showScreen('startScreen');}
@@ -696,7 +696,7 @@ function handleSubmitFile(blob,filename,mimeType){
   else if(canShareText){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Summary';dlBtn.style.display='block';downloadBlob(blob,filename);msg.innerHTML='Your round data has been saved!<br>File downloaded. Tap Share to send a summary.';showToast('File downloaded!');}
   else{shareBtn.style.display='none';dlBtn.style.display='block';downloadBlob(blob,filename);
     var ticketUrl=roundData.ticketUrl;if(ticketUrl){if(!/^https?:\/\//.test(ticketUrl)){ticketUrl=ticketUrl.replace(/^tt\//,'');ticketUrl='https://t.corp.amazon.com/'+ticketUrl;}window.open(ticketUrl,'_blank');}
-    msg.innerHTML='Your round data has been saved!<br>File downloaded â€” attach to your SIM ticket.';showToast('File downloaded!');}
+    msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';showToast('File downloaded!');}
 }
 
 /* ===== EXCEL EXPORT ===== */
@@ -730,7 +730,7 @@ function shareToSlack(){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(function(){
       if(btn)btn.textContent='\u2705 Copied! Opening Slack...';
-      showToast('Summary copied â€” paste into your Slack channel');
+      showToast('Summary copied — paste into your Slack channel');
       setTimeout(function(){window.open('slack://open','_blank');},500);
     }).catch(function(){
       fallbackCopy(text);
@@ -759,7 +759,7 @@ function copySummaryToClipboard(){
 function fallbackCopy(text){
   var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px';
   document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');showToast('Summary copied!');}catch(e){showToast('Could not copy â€” long press to select text');}
+  try{document.execCommand('copy');showToast('Summary copied!');}catch(e){showToast('Could not copy — long press to select text');}
   document.body.removeChild(ta);
 }
 function downloadFileAgain(){
@@ -872,7 +872,7 @@ function editRound(fbKey){
     var data=snap.val();if(!data){showToast('Round not found');return;}
     roundData=data;isEditing=true;editKey=fbKey;currentSection=0;photoStore={};noteEditState={};
     activeBuilding=roundData.building;
-    document.getElementById('headerSub').textContent=activeBuilding+' â€” '+(roundData.shift||'')+' â€” '+(roundData.technician||'');
+    document.getElementById('headerSub').textContent=activeBuilding+' — '+(roundData.shift||'')+' — '+(roundData.technician||'');
     showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();switchMainTab('walk');
   });
 }
@@ -1082,8 +1082,8 @@ var lastSubmitBlob=null;var lastSubmitFilename='';var lastSubmitMime='';var last
 function shareLastFile(){
   if(!lastSubmitBlob)return;
   try{var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
-  navigator.share({title:lastSubmitFilename.replace(/[._]/g,' '),text:lastSubmitSummary,files:[file]}).then(function(){showToast('Shared successfully!');}).catch(function(err){if(err.name!=='AbortError'){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share failed â€” file downloaded');}});
-  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share unavailable â€” file downloaded');}
+  navigator.share({title:lastSubmitFilename.replace(/[._]/g,' '),text:lastSubmitSummary,files:[file]}).then(function(){showToast('Shared successfully!');}).catch(function(err){if(err.name!=='AbortError'){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share failed — file downloaded');}});
+  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share unavailable — file downloaded');}
 }
 function downloadLastFile(){if(!lastSubmitBlob)return;downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('File downloaded!');}
 
@@ -1160,7 +1160,7 @@ function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(fu
       var vv=window.visualViewport;
       var kbHeight=origHeight-vv.height;
       if(kbHeight>100){
-        // Keyboard is open â€” scroll the field into view
+        // Keyboard is open — scroll the field into view
         // Find the scrollable parent
         var sp=activeField.parentNode;
         while(sp&&sp!==document.body){
@@ -1181,7 +1181,7 @@ function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(fu
           }
         },50);
       }else{
-        // Keyboard closed â€” remove padding
+        // Keyboard closed — remove padding
         var containers=document.querySelectorAll('.content,[id*=Content]');
         for(var i=0;i<containers.length;i++)containers[i].style.paddingBottom='';
       }
