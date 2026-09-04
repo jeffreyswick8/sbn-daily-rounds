@@ -1425,7 +1425,7 @@ function cancelDoneHandoff(){
 
 function generateExcel(){
   var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
-  h+='<head><meta charset="UTF-8"><style>';
+  h+='<he'+'ad><meta charset="UTF-8"><sty'+'le>';
   h+='table{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11px;width:100%}';
   h+='td,th{border:1px solid #d5d9d9;padding:6px 10px}';
   h+='.title{background:#1e1e1e;color:#06b6d4;font-size:16px;font-weight:bold;text-align:center;border:none}';
@@ -1434,7 +1434,7 @@ function generateExcel(){
   h+='.col-header{background:#1e1e1e;color:#fff;font-weight:bold;text-align:center;font-size:10px}';
   h+='.ok{background:#dcfce7;color:#166534;text-align:center}.issue{background:#fef2f2;color:#991b1b;font-weight:bold;text-align:center}';
   h+='.note-cell{background:#fffbeb;font-style:italic}.summary-hdr{background:#06b6d4;color:#000;font-weight:bold}.summary{background:#f0fdfa}';
-  h+='</style></head><body><table>';
+  h+='</'+'style></'+'head><'+'body><table>';
   h+='<tr><td class="title" colspan="4">SBN DAILY ROUNDS REPORT</td></tr>';
   h+='<tr><td class="info-label">Building</td><td class="info-value">'+roundData.building+'</td><td class="info-label">Date</td><td class="info-value">'+roundData.date+'</td></tr>';
   h+='<tr><td class="info-label">Alias</td><td class="info-value">'+roundData.technician+'</td><td class="info-label">Shift</td><td class="info-value">'+roundData.shift+'</td></tr>';
@@ -1457,7 +1457,7 @@ function generateExcel(){
   h+='<tr><td class="summary-hdr" colspan="4">SUMMARY</td></tr>';
   h+='<tr><td class="summary">Total</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+'</td></tr>';
   h+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td></td><td></td></tr>';
-  h+='</table></body></html>';return h;
+  h+='</table></'+'body></html>';return h;
 }
 
 /* ===== RECENT ROUNDS ===== */
@@ -1845,4 +1845,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.8 -->
+<!-- v3.9 -->
