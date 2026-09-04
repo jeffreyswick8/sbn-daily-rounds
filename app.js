@@ -1279,4 +1279,4 @@ function loadBuildingConfig(){
     else{db.ref('config/buildings').set(buildingList);}
   });
 }
-loadTheme();initStartScreen();waitForFirebase();
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();});}else{loadTheme();initStartScreen();waitForFirebase();}
