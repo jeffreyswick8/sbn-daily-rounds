@@ -525,7 +525,10 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="done-content">
 <div class="done-icon">&#9989;</div>
 <div class="done-title">Rounds Submitted!</div>
-<div class="done-msg">Your round data has been saved and the report is ready.<br>Attach the downloaded file to your SIM ticket.</div>
+<div class="done-msg" id="doneMsg">Your round data has been saved and the report is ready.</div>
+<button class="btn-share" id="btnShareFile" style="display:none;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:12px;min-height:56px" onclick="shareFile()">&#128228; Share Round Report</button>
+<button class="btn-download" id="btnDownloadFile" style="display:none;width:100%;padding:16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;min-height:56px" onclick="downloadAgain()">&#128229; Download Again</button>
+<button class="btn-handoff" style="width:100%;padding:16px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;min-height:56px" onclick="startHandoffFromDone()">&#128221; Leave Handoff Note</button>
 <button class="btn-new-round" onclick="resetApp()">Start New Round</button>
 </div>
 </div>
@@ -924,7 +927,7 @@ function renderWalkthrough(){
   if(!roundData)return;
   var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
   document.getElementById('walkTitle').textContent=sec.name;
-  document.getElementById('walkDesc').textContent=sec.desc;
+  document.getElementById('walkDesc').textContent=sec.cheatSheet?'':sec.desc;
   // Vertical stepper
   var sHtml='';
   for(var p=0;p<activeSections.length;p++){
@@ -941,11 +944,13 @@ function renderWalkthrough(){
   // Cheat sheet
   var html='';
   if(sec.cheatSheet){
-    html+='<div class="cheat-sheet-toggle" onclick="this.classList.toggle(\'open\')"><span class="cheat-sheet-arrow">&#9654;</span> Reference Values</div>';
+    html+='<div class="cheat-sheet-toggle" onclick="this.classList.toggle(\'open\')"><span class="cheat-sheet-arrow">&#9654;</span> Reference Values \u0026 Description</div>';
     html+='<div class="cheat-sheet-content"><div class="cheat-sheet-content-inner">';
+    html+='<div style="margin-bottom:8px;color:var(--text)">'+escHtml(sec.desc)+'</div>';
+    html+='<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">';
     var vals=sec.cheatSheet.split(' | ');
     for(var v=0;v<vals.length;v++)html+='<div><strong>'+escHtml(vals[v].split(':')[0])+':</strong>'+escHtml(vals[v].split(':').slice(1).join(':'))+'</div>';
-    html+='</div></div>';
+    html+='</div></div></div>';
   }
   // Walk content
   if(sec.type==='notes_only'){
@@ -1005,6 +1010,9 @@ function renderWalkthrough(){
   }
   document.getElementById('walkContent').innerHTML=html;
   if(sec.type!=='notes_only')for(var si=0;si<sCols.length;si++)attachSwipe(document.getElementById('card-'+si),currentSection,si,sec.type);
+  // Auto-compact on scroll down (KC feedback: more screen space)
+  var wc=document.getElementById('walkContent');
+  if(wc&&!wc._compactBound){wc._compactBound=true;wc.addEventListener('scroll',function(){if(wc.scrollTop>40)enterCompactWalk();},{passive:true});}
   updateNavButtons();updateMiniHeader();
 }
 /* ===== NOTE LOCK/UNLOCK ===== */
@@ -1235,6 +1243,23 @@ function handleSubmitFile(blob,filename,mimeType){
 }
 
 /* ===== EXCEL EXPORT ===== */
+function shareFile(){
+  if(!lastSubmitBlob)return;
+  try{
+    var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
+    navigator.share({text:lastSubmitSummary,files:[file]}).catch(function(){downloadBlob(lastSubmitBlob,lastSubmitFilename);});
+  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);}
+}
+function downloadAgain(){if(lastSubmitBlob)downloadBlob(lastSubmitBlob,lastSubmitFilename);}
+function startHandoffFromDone(){
+  showScreen('mainScreen');switchMainTab('zones');
+  startHandoffEdit();
+}
+function startHandoffEdit(){
+  handoffEditing=true;renderHandoff();
+  var area=document.getElementById('handoffArea');if(area)area.scrollIntoView({behavior:'smooth'});
+}
+
 function generateExcel(){
   var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">';
   h+='<head><meta charset="UTF-8"><style>';
@@ -1544,4 +1569,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v2.3 -->
+<!-- v2.4 -->
