@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SBN Daily Rounds Report</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#121212;color:#f0f0f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.container{max-width:800px;width:100%;background:#1e1e1e;border-radius:14px;overflow:hidden;border:1px solid #3a3a3a}
+.header{background:#06b6d4;color:#000;padding:16px 20px;font-size:18px;font-weight:700;text-align:center}
+.loading{padding:40px;text-align:center;color:#9ca3af}
+.error{padding:40px;text-align:center;color:#ef4444}
+.report-frame{width:100%;border:none;min-height:500px;background:#fff}
+.actions{padding:16px 20px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;min-height:48px;min-width:140px;text-align:center}
+.btn-download{background:#06b6d4;color:#000}
+.btn-download:active{opacity:0.8}
+.btn-back{background:#2a2a2a;color:#9ca3af;border:1px solid #3a3a3a}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">SBN Daily Rounds Report</div>
+<div id="content"><div class="loading">Loading report...</div></div>
+<div class="actions" id="actions" style="display:none">
+<button class="btn btn-download" onclick="downloadReport()">&#128229; Download Report</button>
+<a class="btn btn-back" href="./" style="text-decoration:none">&#8592; Back to App</a>
+</div>
+</div>
+<script>
+var reportHtml=null;
+var firebaseConfig={apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6'};
+try{firebase.initializeApp(firebaseConfig,'report');}catch(e){try{firebase.app('report');}catch(e2){}}
+var db=firebase.app('report').database();
+
+var params=new URLSearchParams(window.location.search);
+var key=params.get('key');
+if(!key){
+  document.getElementById('content').innerHTML='<div class="error">No report key provided.</div>';
+}else{
+  db.ref('reports/'+key).once('value',function(snap){
+    var val=snap.val();
+    if(!val||!val.html){
+      document.getElementById('content').innerHTML='<div class="error">Report not found or expired.</div>';
+      return;
+    }
+    reportHtml=val.html;
+    var iframe=document.createElement('iframe');
+    iframe.className='report-frame';
+    iframe.sandbox='allow-same-origin';
+    iframe.srcdoc=reportHtml;
+    var contentDiv=document.getElementById('content');
+    contentDiv.innerHTML='';
+    contentDiv.appendChild(iframe);
+    document.getElementById('actions').style.display='flex';
+    // Auto-size iframe
+    iframe.onload=function(){try{iframe.style.height=iframe.contentDocument.body.scrollHeight+40+'px';}catch(e){iframe.style.height='600px';}};
+    // Update title
+    if(val.building&&val.date)document.querySelector('.header').textContent=val.building+' Rounds — '+val.date;
+  },function(){
+    document.getElementById('content').innerHTML='<div class="error">Could not load report. Check your connection.</div>';
+  });
+}
+function downloadReport(){
+  if(!reportHtml)return;
+  var baseName=(params.get('name')||'SBN_Rounds_Report');
+  var blob=new Blob([reportHtml],{type:'application/vnd.ms-excel'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=baseName+'.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
