@@ -1257,17 +1257,14 @@ function shareFile(){
   var btn=document.getElementById('btnShareFile');
   if(!roundData){if(btn)btn.textContent='No data';return;}
   if(btn){btn.textContent='Opening share...';btn.style.opacity='0.7';}
-  // Generate file fresh and share IMMEDIATELY — no download, no DOM manipulation
-  // navigator.share MUST be the first async action from the user tap
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
-  var fname=baseName+'.xls';
-  var file=new File([excelHtml],fname,{type:'application/vnd.ms-excel',lastModified:Date.now()});
-  navigator.share({files:[file],title:fname,text:lastSubmitSummary||''}).then(function(){
+  var file=new File([excelHtml],baseName+'.html',{type:'text/html',lastModified:Date.now()});
+  navigator.share({files:[file],title:baseName,text:lastSubmitSummary||''}).then(function(){
     if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
   }).catch(function(e){
     if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
-    if(e.name!=='AbortError')showToast('Share failed: '+e.message);
+    if(e.name!=='AbortError')showToast('Share error: '+e.name+' \u2014 '+e.message);
   });
 }
 
@@ -1718,4 +1715,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.1 -->
+<!-- v3.2 -->
