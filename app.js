@@ -184,18 +184,10 @@ function beginRounds(){
       if(loaded)return;loaded=true;clearTimeout(timeout);
       try{var val=snap.val();
       if(val&&Array.isArray(val)&&val.length>0){
-        // Always sync cols, type, desc, cheatSheet from code defaults (latest values win)
-        for(var fi=0;fi<val.length;fi++){
-          if(fi<defaultSections.length){
-            val[fi].cols=defaultSections[fi].cols||[];
-            val[fi].type=defaultSections[fi].type||'ok_issue';
-            val[fi].desc=defaultSections[fi].desc||'';
-            val[fi].cheatSheet=defaultSections[fi].cheatSheet||'';
-          }else{
-            if(!val[fi].cols)val[fi].cols=[];if(!val[fi].type)val[fi].type='ok_issue';if(!val[fi].desc)val[fi].desc='';
-          }
-        }
-        activeSections=val;
+        // Always use code defaults — they are the source of truth
+        activeSections=defaultSections;
+        // Update Firebase with latest defaults
+        db.ref('config/sections/'+selectedBldg).set(defaultSections);
       }
       else{activeSections=defaultSections;db.ref('config/sections/'+selectedBldg).set(defaultSections);}
       }catch(e){activeSections=defaultSections;}
@@ -975,13 +967,7 @@ function editRound(fbKey){
     // Load building sections before opening (handles different section configs)
     db.ref('config/sections/'+activeBuilding).once('value',function(secSnap){
       var secVal=secSnap.val();
-      if(secVal&&Array.isArray(secVal)&&secVal.length>0){
-        for(var fi=0;fi<secVal.length;fi++){
-          if(!secVal[fi].cols)secVal[fi].cols=[];if(!secVal[fi].type)secVal[fi].type='ok_issue';if(!secVal[fi].desc)secVal[fi].desc='';
-          if(fi<defaultSections.length){secVal[fi].cheatSheet=defaultSections[fi].cheatSheet||'';if(!secVal[fi].desc&&defaultSections[fi].desc)secVal[fi].desc=defaultSections[fi].desc;}
-        }
-        activeSections=secVal;
-      }else{activeSections=defaultSections;}
+      activeSections=defaultSections;
       // Ensure round data sections match activeSections length
       while(roundData.sections.length<activeSections.length){
         var sec=activeSections[roundData.sections.length];
