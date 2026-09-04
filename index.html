@@ -333,7 +333,6 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 .handoff-btn-clear{background:var(--card);color:var(--muted);border:1px solid var(--border)}
 .handoff-input{width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;min-height:80px;resize:vertical;margin-bottom:10px}
 .handoff-input:focus{outline:none;border-color:var(--accent)}
-
 /* ===== COMPLIANCE DASHBOARD ===== */
 .compliance-header{padding:16px 16px 8px;font-size:13px;color:var(--muted)}
 .compliance-header strong{color:var(--text);font-size:16px}
@@ -455,6 +454,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="tab-pane" id="tabHistory" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none">
 <div id="historyList"></div>
 </div>
+</div>
 
 <!-- TAB: COMPLIANCE -->
 <div class="tab-pane" id="tabCompliance" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none">
@@ -462,6 +462,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="compliance-summary" id="complianceSummary"></div>
 <div class="compliance-grid" id="complianceGrid"></div>
 </div>
+
 </div>
 
 <!-- SCREEN 3: SUMMARY -->
@@ -474,13 +475,8 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="done-content">
 <div class="done-icon">&#9989;</div>
 <div class="done-title">Rounds Submitted!</div>
-<div class="done-msg" id="doneMsg">Your round data has been saved and the report is ready.</div>
-<div id="doneActions" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:400px;margin-top:16px">
-<button class="btn-new-round" id="btnShareFile" style="display:none;background:var(--accent);color:#000" onclick="shareLastFile()">&#128228; Share Round Report</button>
-<button class="btn-new-round" id="btnDownloadFile" style="display:none;background:var(--card);color:var(--text);border:1px solid var(--border)" onclick="downloadLastFile()">&#128229; Download File</button>
-<button class="btn-new-round" style="background:var(--amber);color:#000" onclick="showHandoffFromDone()">&#128221; Leave Handoff Note</button>
+<div class="done-msg">Your round data has been saved and the report is ready.<br>Attach the downloaded file to your SIM ticket.</div>
 <button class="btn-new-round" onclick="resetApp()">Start New Round</button>
-</div>
 </div>
 </div>
 
@@ -567,43 +563,24 @@ function deleteFromFirebase(key){
   if(!db){queueOfflineWrite('delete',key,null);return;}
   try{db.ref(key).remove().catch(function(){queueOfflineWrite('delete',key,null);});}catch(e){queueOfflineWrite('delete',key,null);}
 }
-
-/* ===== OFFLINE QUEUE ===== */
 function queueOfflineWrite(action,key,data){
-  try{
-    var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
-    queue.push({action:action,key:key,data:data,timestamp:Date.now()});
-    localStorage.setItem('sbn-rounds-offline-queue',JSON.stringify(queue));
-    updateOfflineBadge();
-    showToast('Saved offline — will sync when connected');
-  }catch(e){}
+  try{var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
+  queue.push({action:action,key:key,data:data,timestamp:Date.now()});
+  localStorage.setItem('sbn-rounds-offline-queue',JSON.stringify(queue));
+  updateOfflineBadge();showToast('Saved offline — will sync when connected');}catch(e){}
 }
-
 function syncOfflineQueue(){
   if(!db)return;
-  try{
-    var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
-    if(queue.length===0)return;
-    var synced=0;
-    queue.forEach(function(item){
-      try{
-        if(item.action==='set')db.ref(item.key).set(item.data);
-        else if(item.action==='delete')db.ref(item.key).remove();
-        synced++;
-      }catch(e){}
-    });
-    localStorage.setItem('sbn-rounds-offline-queue','[]');
-    updateOfflineBadge();
-    if(synced>0)showToast(synced+' offline write'+(synced>1?'s':'')+' synced!');
-  }catch(e){}
+  try{var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
+  if(queue.length===0)return;var synced=0;
+  queue.forEach(function(item){try{if(item.action==='set')db.ref(item.key).set(item.data);else if(item.action==='delete')db.ref(item.key).remove();synced++;}catch(e){}});
+  localStorage.setItem('sbn-rounds-offline-queue','[]');updateOfflineBadge();
+  if(synced>0)showToast(synced+' offline write'+(synced>1?'s':'')+' synced!');}catch(e){}
 }
-
 function updateOfflineBadge(){
-  try{
-    var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
-    var badge=document.getElementById('offlineBadge');
-    if(badge){if(queue.length>0){badge.textContent=queue.length+' queued';badge.style.display='inline-block';}else{badge.style.display='none';}}
-  }catch(e){}
+  try{var queue=JSON.parse(localStorage.getItem('sbn-rounds-offline-queue')||'[]');
+  var badge=document.getElementById('offlineBadge');
+  if(badge){if(queue.length>0){badge.textContent=queue.length+' queued';badge.style.display='inline-block';}else{badge.style.display='none';}}}catch(e){}
 }
 
 /* ===== HELPERS ===== */
@@ -649,7 +626,7 @@ function initStartScreen(){
   for(var i=0;i<buildings.length;i++)html+='<button class="building-btn" data-bldg="'+buildings[i]+'">'+buildings[i]+'</button>';
   grid.innerHTML=html;
   var btns=grid.querySelectorAll('.building-btn');
-  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();loadRecentRounds(this.getAttribute('data-bldg'));});
+  for(var j=0;j<btns.length;j++)btns[j].addEventListener('click',function(){var all=grid.querySelectorAll('.building-btn');for(var k=0;k<all.length;k++)all[k].classList.remove('selected');this.classList.add('selected');checkReady();});
   var sg=document.getElementById('shiftGrid');
   sg.innerHTML='<button class="shift-btn" data-shift="Days">Days</button><button class="shift-btn" data-shift="Nights">Nights</button>';
   var sb=sg.querySelectorAll('.shift-btn');
@@ -664,22 +641,15 @@ function checkReady(){var ok=getSelectedBuilding()&&document.getElementById('tec
 function beginRounds(){
   currentSection=0;photoStore={};noteEditState={};
   var selectedBldg=getSelectedBuilding();
-  // Try to load building-specific sections from Firebase
   if(db){
     db.ref('config/sections/'+selectedBldg).once('value',function(snap){
       var val=snap.val();
-      if(val&&Array.isArray(val)&&val.length>0){
-        activeSections=val;
-      }else{
-        activeSections=defaultSections;
-        // Seed this building's config with defaults
-        db.ref('config/sections/'+selectedBldg).set(defaultSections);
-      }
+      if(val&&Array.isArray(val)&&val.length>0){activeSections=val;}
+      else{activeSections=defaultSections;db.ref('config/sections/'+selectedBldg).set(defaultSections);}
       startRoundsWithSections(selectedBldg);
     },function(){activeSections=defaultSections;startRoundsWithSections(selectedBldg);});
   }else{activeSections=defaultSections;startRoundsWithSections(selectedBldg);}
 }
-
 function startRoundsWithSections(selectedBldg){
   var secs=[];
   for(var i=0;i<activeSections.length;i++){
@@ -1102,93 +1072,25 @@ function submitRounds(){
   }else{var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});handleSubmitFile(blob,baseName+'.xls','application/vnd.ms-excel');}
   }catch(err){alert('Submit error: '+err.message);}
 }
-
-var lastSubmitBlob=null;var lastSubmitFilename='';var lastSubmitMime='';var lastSubmitSummary='';
-
+function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 function handleSubmitFile(blob,filename,mimeType){
-  // Save to Firebase first
   var fbKey='rounds/'+roundData.building+'/'+roundData.date+'/'+Date.now();
   if(isEditing&&editKey)fbKey=editKey;
   saveToFirebase(roundData,fbKey);saveFindingsFromRound(roundData,fbKey);
-
-  // Store file for later sharing/downloading from Done screen
   lastSubmitBlob=blob;lastSubmitFilename=filename;lastSubmitMime=mimeType;
-
-  // Build summary text
   var totalItems=0,okCount=0,issueCount=0;
   roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(!item)return;totalItems++;if(item.status==='ok'||item.status==='expected')okCount++;if(item.status==='issue'||item.status==='unexpected')issueCount++;});});
-  lastSubmitSummary=roundData.building+' Daily Rounds\n';
-  lastSubmitSummary+='Date: '+roundData.date+'\n';
-  lastSubmitSummary+='Alias: '+roundData.technician+'\n';
-  lastSubmitSummary+='Shift: '+roundData.shift+'\n\n';
-  lastSubmitSummary+='Summary: '+okCount+'/'+totalItems+' OK, '+issueCount+' issues\n';
-  if(issueCount>0){lastSubmitSummary+='\nISSUES:\n';roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(item&&(item.status==='issue'||item.status==='unexpected'))lastSubmitSummary+='- '+sec.name+' > '+(item.name||'Unknown')+': '+(item.note||'')+'\n';});});}
-  if(roundData.ticketUrl)lastSubmitSummary+='\nDaily Ticket: '+roundData.ticketUrl;
-
-  // Check if share is available
+  lastSubmitSummary=roundData.building+' Daily Rounds\nDate: '+roundData.date+'\nAlias: '+roundData.technician+'\nShift: '+roundData.shift+'\n\nSummary: '+okCount+'/'+totalItems+' OK, '+issueCount+' issues';
+  if(issueCount>0){lastSubmitSummary+='\n\nISSUES:\n';roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(item&&(item.status==='issue'||item.status==='unexpected'))lastSubmitSummary+='- '+sec.name+' > '+(item.name||'Unknown')+': '+(item.note||'')+'\n';});});}
   var canShareFiles=false;
-  try{var testFile=new File([blob],filename,{type:mimeType});canShareFiles=navigator.canShare&&navigator.canShare({files:[testFile]});}catch(e){canShareFiles=false;}
-
-  // Show Done screen with appropriate buttons
+  try{var testFile=new File([blob],filename,{type:mimeType});canShareFiles=navigator.canShare&&navigator.canShare({files:[testFile]});}catch(e){}
   showScreen('doneScreen');
-  var shareBtn=document.getElementById('btnShareFile');
-  var dlBtn=document.getElementById('btnDownloadFile');
-  var msg=document.getElementById('doneMsg');
-
-  if(canShareFiles){
-    // Phone - show Share button prominently
-    shareBtn.style.display='block';
-    dlBtn.style.display='block';
-    msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';
-    showToast('Rounds submitted!');
-  }else{
-    // Tablet/desktop - auto-download and show ticket/email options
-    shareBtn.style.display='none';
-    dlBtn.style.display='block';
-    dlBtn.textContent='\ud83d\udce5 Download Again';
-    downloadBlob(blob,filename);
-    // Open SIM ticket if provided
-    var ticketUrl=roundData.ticketUrl;
-    if(ticketUrl){if(!/^https?:\/\//.test(ticketUrl)){ticketUrl=ticketUrl.replace(/^tt\//,'');ticketUrl='https://t.corp.amazon.com/'+ticketUrl;}window.open(ticketUrl,'_blank');}
-    // Open pre-filled email
-    var mailSubject=roundData.building+' Daily Rounds - '+roundData.date+' - '+roundData.shift;
-    var mailBody=lastSubmitSummary+'\n\n(File attached separately)';
-    var mailtoUrl='mailto:?subject='+encodeURIComponent(mailSubject)+'&body='+encodeURIComponent(mailBody);
-    try{window.location.href=mailtoUrl;}catch(e){}
-    msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';
-    showToast('File downloaded!');
-  }
+  var shareBtn=document.getElementById('btnShareFile');var dlBtn=document.getElementById('btnDownloadFile');var msg=document.getElementById('doneMsg');
+  if(canShareFiles){shareBtn.style.display='block';dlBtn.style.display='block';msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';showToast('Rounds submitted!');}
+  else{shareBtn.style.display='none';dlBtn.style.display='block';downloadBlob(blob,filename);
+    var ticketUrl=roundData.ticketUrl;if(ticketUrl){if(!/^https?:\/\//.test(ticketUrl)){ticketUrl=ticketUrl.replace(/^tt\//,'');ticketUrl='https://t.corp.amazon.com/'+ticketUrl;}window.open(ticketUrl,'_blank');}
+    msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';showToast('File downloaded!');}
 }
-
-function shareLastFile(){
-  if(!lastSubmitBlob)return;
-  try{
-    var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
-    navigator.share({
-      title:lastSubmitFilename.replace(/[._]/g,' '),
-      text:lastSubmitSummary,
-      files:[file]
-    }).then(function(){showToast('Shared successfully!');}).catch(function(err){
-      if(err.name!=='AbortError'){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share failed — file downloaded instead');}
-    });
-  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share unavailable — file downloaded');}
-}
-
-function showHandoffFromDone(){
-  showScreen('mainScreen');
-  handoffEditing=true;
-  renderHandoff();
-  switchMainTab('zones');
-  showToast('Write your handoff note for the next shift');
-}
-
-function downloadLastFile(){
-  if(!lastSubmitBlob)return;
-  downloadBlob(lastSubmitBlob,lastSubmitFilename);
-  showToast('File downloaded!');
-}
-
-function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 
 /* ===== EXCEL EXPORT ===== */
 function generateExcel(){
@@ -1202,38 +1104,7 @@ function generateExcel(){
   h+='.col-header{background:#1e1e1e;color:#fff;font-weight:bold;text-align:center;font-size:10px}';
   h+='.ok{background:#dcfce7;color:#166534;text-align:center}.issue{background:#fef2f2;color:#991b1b;font-weight:bold;text-align:center}';
   h+='.note-cell{background:#fffbeb;font-style:italic}.summary-hdr{background:#06b6d4;color:#000;font-weight:bold}.summary{background:#f0fdfa}';
-  h+='
-/* ===== SHIFT HANDOFF ===== */
-.handoff-card{background:var(--surface);border:2px solid var(--amber);border-radius:var(--radius);padding:16px;margin-bottom:12px}
-.handoff-title{font-size:13px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.handoff-meta{font-size:11px;color:var(--muted);margin-bottom:8px}
-.handoff-text{font-size:14px;line-height:1.6;color:var(--text);padding:10px;background:var(--card);border-radius:var(--radius-sm);margin-bottom:10px}
-.handoff-actions{display:flex;gap:8px;flex-wrap:wrap}
-.handoff-btn{padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;min-height:44px}
-.handoff-btn-ack{background:var(--green);color:#fff}
-.handoff-btn-add{background:var(--accent);color:#000}
-.handoff-btn-clear{background:var(--card);color:var(--muted);border:1px solid var(--border)}
-.handoff-input{width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;min-height:80px;resize:vertical;margin-bottom:10px}
-.handoff-input:focus{outline:none;border-color:var(--accent)}
-
-/* ===== COMPLIANCE DASHBOARD ===== */
-.compliance-header{padding:16px 16px 8px;font-size:13px;color:var(--muted)}
-.compliance-header strong{color:var(--text);font-size:16px}
-.compliance-grid{padding:0 16px 16px}
-.compliance-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.compliance-card.not-walked{border-left:4px solid var(--red);background:rgba(239,68,68,0.06)}
-.compliance-card.walked-today{border-left:4px solid var(--green);background:rgba(34,197,94,0.06)}
-.compliance-bldg{font-size:16px;font-weight:700}
-.compliance-info{flex:1}
-.compliance-status{font-size:12px;color:var(--muted);margin-top:2px}
-.compliance-badge{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;flex-shrink:0}
-.compliance-badge-ok{background:rgba(34,197,94,0.15);color:var(--green)}
-.compliance-badge-miss{background:rgba(239,68,68,0.15);color:var(--red)}
-.compliance-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 16px 16px}
-.compliance-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
-.compliance-stat-val{font-size:24px;font-weight:700}
-.compliance-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase}
-</style></head><body><table>';
+  h+='</style></head><body><table>';
   h+='<tr><td class="title" colspan="4">SBN DAILY ROUNDS REPORT</td></tr>';
   h+='<tr><td class="info-label">Building</td><td class="info-value">'+roundData.building+'</td><td class="info-label">Date</td><td class="info-value">'+roundData.date+'</td></tr>';
   h+='<tr><td class="info-label">Alias</td><td class="info-value">'+roundData.technician+'</td><td class="info-label">Shift</td><td class="info-value">'+roundData.shift+'</td></tr>';
@@ -1260,10 +1131,10 @@ function generateExcel(){
 }
 
 /* ===== RECENT ROUNDS ===== */
-function loadRecentRounds(filterBuilding){
+function loadRecentRounds(){
   tryClipboardAutoFill();
   if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
-  var buildings=filterBuilding?[filterBuilding]:buildingList;
+  var buildings=['SBN201','SBN202','SBN203','SBN204','SBN205','SBN206','SBN207','SBN208','SBN209'];
   var allRounds=[];var pending=0;var today=new Date();
   for(var d=0;d<7;d++){var dt=new Date(today);dt.setDate(dt.getDate()-d);
     var ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
@@ -1310,74 +1181,42 @@ function renderCompliance(){
     pending++;
     db.ref('rounds/'+bldg+'/'+todayStr).once('value',function(snap){
       var val=snap.val();
-      if(val){
-        var keys=Object.keys(val);
-        results[bldg].walked=true;
-        keys.forEach(function(k){
-          var r=val[k];
-          if(r.startTime&&(!results[bldg].lastWalk||r.startTime>results[bldg].lastWalk)){
-            results[bldg].lastWalk=r.startTime;
-            results[bldg].lastTech=r.technician||'';
-            results[bldg].lastShift=r.shift||'';
-          }
-        });
-      }
-      pending--;
-      if(pending===0)renderComplianceResults(results);
+      if(val){var keys=Object.keys(val);results[bldg].walked=true;
+        keys.forEach(function(k){var r=val[k];if(r.startTime&&(!results[bldg].lastWalk||r.startTime>results[bldg].lastWalk)){results[bldg].lastWalk=r.startTime;results[bldg].lastTech=r.technician||'';results[bldg].lastShift=r.shift||'';}});}
+      pending--;if(pending===0)renderComplianceResults(results);
     },function(){pending--;if(pending===0)renderComplianceResults(results);});
-    // Also count open findings
     db.ref('findings/'+bldg).once('value',function(snap){
-      var val=snap.val();
-      if(val){var fkeys=Object.keys(val);fkeys.forEach(function(fk){if(val[fk].status==='open')results[bldg].findings++;});}
+      var val=snap.val();if(val){var fkeys=Object.keys(val);fkeys.forEach(function(fk){if(val[fk].status==='open')results[bldg].findings++;});}
     });
   });
 }
-
 function renderComplianceResults(results){
   var walkedCount=0,notWalkedCount=0,totalFindings=0;
-  buildingList.forEach(function(b){
-    if(results[b].walked)walkedCount++;else notWalkedCount++;
-    totalFindings+=results[b].findings;
-  });
-  // Summary cards
+  buildingList.forEach(function(b){if(results[b].walked)walkedCount++;else notWalkedCount++;totalFindings+=results[b].findings;});
   var sHtml='';
   sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--green)">'+walkedCount+'</div><div class="compliance-stat-lbl">Walked</div></div>';
   sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--red)">'+notWalkedCount+'</div><div class="compliance-stat-lbl">Not Walked</div></div>';
   sHtml+='<div class="compliance-stat"><div class="compliance-stat-val" style="color:var(--amber)">'+totalFindings+'</div><div class="compliance-stat-lbl">Open Findings</div></div>';
   document.getElementById('complianceSummary').innerHTML=sHtml;
-  // Building cards - not walked first, then walked
-  var sorted=buildingList.slice().sort(function(a,b){
-    if(results[a].walked===results[b].walked)return a.localeCompare(b);
-    return results[a].walked?1:-1;
-  });
+  var sorted=buildingList.slice().sort(function(a,b){if(results[a].walked===results[b].walked)return a.localeCompare(b);return results[a].walked?1:-1;});
   var gHtml='';
-  sorted.forEach(function(bldg){
-    var r=results[bldg];
-    var cls=r.walked?'walked-today':'not-walked';
+  sorted.forEach(function(bldg){var r=results[bldg];var cls=r.walked?'walked-today':'not-walked';
     var badge=r.walked?'<span class="compliance-badge compliance-badge-ok">&#9989; Walked</span>':'<span class="compliance-badge compliance-badge-miss">&#10060; Not Walked</span>';
     var status=r.walked?'Last: '+escHtml(r.lastTech)+' &bull; '+escHtml(r.lastShift)+' &bull; '+timeAgo(r.lastWalk):'No walks recorded today';
     if(r.findings>0)status+=' &bull; <span style="color:var(--red)">'+r.findings+' open finding'+(r.findings>1?'s':'')+'</span>';
-    gHtml+='<div class="compliance-card '+cls+'">';
-    gHtml+='<div class="compliance-info"><div class="compliance-bldg">'+bldg+'</div><div class="compliance-status">'+status+'</div></div>';
-    gHtml+=badge+'</div>';
+    gHtml+='<div class="compliance-card '+cls+'"><div class="compliance-info"><div class="compliance-bldg">'+bldg+'</div><div class="compliance-status">'+status+'</div></div>'+badge+'</div>';
   });
   document.getElementById('complianceGrid').innerHTML=gHtml;
 }
 
 /* ===== SHIFT HANDOFF NOTES ===== */
 var handoffData=null;var handoffEditing=false;
-
 function loadHandoffNotes(){
   if(!db||!activeBuilding)return;
-  db.ref('handoff/'+activeBuilding+'/current').once('value',function(snap){
-    handoffData=snap.val();
-    renderHandoff();
-  });
+  db.ref('handoff/'+activeBuilding+'/current').once('value',function(snap){handoffData=snap.val();renderHandoff();});
 }
-
 function renderHandoff(){
-  var area=document.getElementById('handoffArea');
-  if(!area)return;
+  var area=document.getElementById('handoffArea');if(!area)return;
   if(!handoffData&&!handoffEditing){area.innerHTML='';return;}
   var html='';
   if(handoffData&&!handoffEditing){
@@ -1402,53 +1241,35 @@ function renderHandoff(){
   }
   area.innerHTML=html;
 }
-
-function ackHandoff(){
-  showToast('Handoff acknowledged');
-  // Keep the note visible but could add an "acknowledged by" field
-  if(db&&activeBuilding&&handoffData){
-    handoffData.acknowledgedBy=roundData?roundData.technician:'';
-    handoffData.acknowledgedAt=Date.now();
-    db.ref('handoff/'+activeBuilding+'/current').set(handoffData);
-  }
-}
-
+function ackHandoff(){showToast('Handoff acknowledged');if(db&&activeBuilding&&handoffData){handoffData.acknowledgedBy=roundData?roundData.technician:'';handoffData.acknowledgedAt=Date.now();db.ref('handoff/'+activeBuilding+'/current').set(handoffData);}}
 function startHandoffEdit(){handoffEditing=true;renderHandoff();}
 function cancelHandoffEdit(){handoffEditing=false;renderHandoff();}
-
 function saveHandoff(){
-  var input=document.getElementById('handoffInput');
-  var note=input?input.value.trim():'';
+  var input=document.getElementById('handoffInput');var note=input?input.value.trim():'';
   if(!note){showToast('Enter a note first');return;}
-  var data={
-    note:note,
-    alias:roundData?roundData.technician:'Unknown',
-    shift:roundData?roundData.shift:'',
-    building:activeBuilding,
-    timestamp:Date.now()
-  };
+  var data={note:note,alias:roundData?roundData.technician:'Unknown',shift:roundData?roundData.shift:'',building:activeBuilding,timestamp:Date.now()};
   saveToFirebase(data,'handoff/'+activeBuilding+'/current');
-  // Also archive it
   saveToFirebase(data,'handoff/'+activeBuilding+'/history/'+Date.now());
-  handoffData=data;
-  handoffEditing=false;
-  renderHandoff();
-  showToast('Handoff note saved!');
+  handoffData=data;handoffEditing=false;renderHandoff();showToast('Handoff note saved!');
 }
-
 function clearHandoff(){
   if(!confirm('Clear this handoff note?'))return;
-  if(db&&activeBuilding){
-    // Archive before clearing
-    if(handoffData)saveToFirebase(handoffData,'handoff/'+activeBuilding+'/history/'+Date.now());
-    db.ref('handoff/'+activeBuilding+'/current').remove();
-  }
-  handoffData=null;
-  renderHandoff();
-  showToast('Handoff note cleared');
+  if(db&&activeBuilding){if(handoffData)saveToFirebase(handoffData,'handoff/'+activeBuilding+'/history/'+Date.now());db.ref('handoff/'+activeBuilding+'/current').remove();}
+  handoffData=null;renderHandoff();showToast('Handoff note cleared');
 }
+function showHandoffFromDone(){showScreen('mainScreen');handoffEditing=true;renderHandoff();switchMainTab('zones');showToast('Write your handoff note for the next shift');}
 
-function resetApp(){roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
+/* ===== SHARE FILE ===== */
+var lastSubmitBlob=null;var lastSubmitFilename='';var lastSubmitMime='';var lastSubmitSummary='';
+function shareLastFile(){
+  if(!lastSubmitBlob)return;
+  try{var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
+  navigator.share({title:lastSubmitFilename.replace(/[._]/g,' '),text:lastSubmitSummary,files:[file]}).then(function(){showToast('Shared successfully!');}).catch(function(err){if(err.name!=='AbortError'){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share failed — file downloaded');}});
+  }catch(e){downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('Share unavailable — file downloaded');}
+}
+function downloadLastFile(){if(!lastSubmitBlob)return;downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('File downloaded!');}
+
+function resetApp(){roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;lastSubmitBlob=null;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
 
 /* ===== DARK/LIGHT MODE ===== */
 function toggleMode(){var btn=document.getElementById('modeBtn');if(document.body.classList.contains('light-mode')){document.body.classList.remove('light-mode');btn.innerHTML='&#9728;&#65039; Light';try{localStorage.setItem('sbn-rounds-theme','dark');}catch(e){}}else{document.body.classList.add('light-mode');btn.innerHTML='&#127769; Dark';try{localStorage.setItem('sbn-rounds-theme','light');}catch(e){}}}
@@ -1481,20 +1302,11 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
 
 /* ===== INIT ===== */
 function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
-
 function loadBuildingConfig(){
-  if(!db)return;
-  syncOfflineQueue();updateOfflineBadge();
+  if(!db)return;syncOfflineQueue();updateOfflineBadge();
   db.ref('config/buildings').once('value',function(snap){
-    var val=snap.val();
-    if(val&&Array.isArray(val)&&val.length>0){
-      buildingList=val;
-      initStartScreen();
-      showToast('Building list loaded');
-    }else{
-      // First time setup - seed Firebase with default building list
-      db.ref('config/buildings').set(buildingList);
-    }
+    var val=snap.val();if(val&&Array.isArray(val)&&val.length>0){buildingList=val;initStartScreen();}
+    else{db.ref('config/buildings').set(buildingList);}
   });
 }
 loadTheme();initStartScreen();waitForFirebase();
