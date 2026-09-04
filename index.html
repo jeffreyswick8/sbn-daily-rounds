@@ -1256,25 +1256,21 @@ function handleSubmitFile(blob,filename,mimeType){
 function shareFile(){
   var btn=document.getElementById('btnShareFile');
   if(!roundData){if(btn)btn.textContent='No data';return;}
-  // Generate file
+  if(btn){btn.textContent='Opening share...';btn.style.opacity='0.7';}
+  // Generate file fresh and share IMMEDIATELY — no download, no DOM manipulation
+  // navigator.share MUST be the first async action from the user tap
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
-  var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});
   var fname=baseName+'.xls';
-  // Download file first so user has it
-  downloadBlob(blob,fname);
-  // Replace share button with Slack + Email options
-  var parent=btn.parentNode;
-  btn.style.display='none';
-  var actions=document.getElementById('shareActions');
-  if(actions)actions.remove();
-  actions=document.createElement('div');actions.id='shareActions';
-  actions.innerHTML='<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:10px">\u2705 Report downloaded: '+fname+'</div>'
-    +'<button id="btnShareSlack" style="width:100%;padding:16px;background:#4A154B;color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;min-height:56px;margin-bottom:8px" onclick="shareToSlack()">\uD83D\uDCAC Share to Slack</button>'
-    +'<button id="btnShareEmail" style="width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;min-height:56px;margin-bottom:8px" onclick="shareToEmail()">\u2709 Share via Email</button>'
-    +'<button style="width:100%;padding:12px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;cursor:pointer" onclick="downloadFileAgain()">\uD83D\uDCE5 Download Again</button>';
-  parent.insertBefore(actions,btn.nextSibling);
+  var file=new File([excelHtml],fname,{type:'application/vnd.ms-excel',lastModified:Date.now()});
+  navigator.share({files:[file],title:fname,text:lastSubmitSummary||''}).then(function(){
+    if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
+  }).catch(function(e){
+    if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
+    if(e.name!=='AbortError')showToast('Share failed: '+e.message);
+  });
 }
+
 function shareToSlack(){
   var btn=document.getElementById('btnShareSlack');
   var text=lastSubmitSummary||'Daily Rounds Report';
@@ -1722,4 +1718,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.0-diag -->
+<!-- v3.1 -->
