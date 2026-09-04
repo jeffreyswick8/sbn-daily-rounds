@@ -351,6 +351,29 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 .compliance-stat-val{font-size:24px;font-weight:700}
 .compliance-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase}
 
+
+/* ===== SECTION NOTES MULTI-NOTE ===== */
+.note-entry-area{display:flex;gap:8px;margin-top:6px}
+.note-entry-area textarea{flex:1;min-height:56px}
+.note-submit-btn{padding:12px 20px;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;min-height:56px;white-space:nowrap;flex-shrink:0}
+.note-submit-btn:active{transform:scale(0.96);opacity:0.8}
+.saved-notes-list{margin-top:8px}
+.saved-note-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-top:6px;font-size:13px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.saved-note-text{flex:1;line-height:1.4;white-space:pre-wrap}
+.saved-note-del{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:2px 6px;flex-shrink:0;opacity:0.6}
+.saved-note-del:active{opacity:1}
+/* ===== CHEAT SHEET ===== */
+.cheat-sheet-toggle{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:8px 0;text-transform:uppercase;letter-spacing:0.5px}
+.cheat-sheet-toggle:active{opacity:0.7}
+.cheat-sheet-arrow{transition:transform 0.2s ease;font-size:10px}
+.cheat-sheet-toggle.open .cheat-sheet-arrow{transform:rotate(90deg)}
+.cheat-sheet-content{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.cheat-sheet-toggle.open+.cheat-sheet-content{max-height:500px}
+.cheat-sheet-content-inner{padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;line-height:1.6;color:var(--muted)}
+.cheat-sheet-content-inner strong{color:var(--text)}
+/* ===== REMAINING EXPECTED BTN ===== */
+.btn-remaining{width:100%;padding:14px;background:rgba(6,182,212,0.1);color:var(--accent);border:2px solid var(--accent);border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;min-height:56px;margin-top:12px;transition:all 0.15s ease}
+.btn-remaining:active{background:rgba(6,182,212,0.25);transform:scale(0.98)}
 /* ===== COMPLIANCE FINDINGS VIEW ===== */
 .compliance-findings-view{padding:16px}
 .compliance-back{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px;padding:8px 0}
@@ -514,21 +537,21 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 window.onerror=function(msg,url,line,col,err){var d=document.createElement('div');d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;font-size:13px;z-index:9999;font-family:monospace';d.textContent='JS Error: '+msg+' (line '+line+')';document.body.appendChild(d);setTimeout(function(){d.remove();},10000);};
 /* ===== DEFAULT SECTIONS DATA ===== */
 var defaultSections = [
-  {name:'Office Area',desc:'Check all sub-zones: Bullpen, MDF Room, MMR (if applicable), Breakroom, Conference Rooms, Electrical Closet, Corridors, ACS/MaxCool panels, Fire Alarm Panel. Verify systems are free of unexpected alarms, doors are secured, and EPMS is operational.',cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel'],type:'ok_issue'},
-  {name:'Medium Voltage Switchgear A and B',desc:'Check that all breakers are in normal alignment, FLoReS is in AUTO, relay status is good, and free of alarms. Check Controls UPS Voltage (110 Vdc - 140 Vdc). Verify no audible or visual alarms present.',cols:['Breaker Status','FLoReS','UPS','Audible/Visual'],type:'ok_issue'},
-  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1C','XMFR 1.1C','GEN 1.1A','XMFR 1.1A','GEN 1.1B','XMFR 1.1B','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp'},
-  {name:'Diesel Fuel System',desc:'Check for leaks in fuel piping, tank, and pumps. Ensure pumps are in auto and free of alarms. Verify fuel level is above 80%. Inspect piping connections, valves, and containment area for signs of leakage or debris.',cols:['Piping','Tank','Pumps','Audible/Visual'],type:'exp_unexp'},
-  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['GEN 2.1C','XMFR 2.1C','GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.4B','XFMR 2.4B','GEN 2.4A','XFMR 2.4A','GEN 2.3B','XFMR 2.3B','GEN 2.3A','XFMR 2.3A','GEN 2.2B','XMFR 2.2B','GEN 2.2A','XMFR 2.2A','GEN 2.1B','XMFR 2.1B','GEN 2.1A','XMFR 2.1A'],type:'exp_unexp'},
-  {name:'Electrical Room 1.1-1.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS/HUPS, DLB, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['HSSB','Lineup 1.1C','Lineup 1.1A','Lineup 1.1B','Lineup 1.2A','Lineup 1.2B','Lineup 1.3A','Lineup 1.3B','Lineup 1.4A','Lineup 1.4B','Lineup 1.5A','Lineup 1.5B','Lineup 1.6A','Lineup 1.6B'],type:'ok_issue'},
-  {name:'DAHU Gallery 1 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['1.1-001','1.1-003','1.1-005','1.1-007','1.1-009','1.2-001','1.2-003','1.2-005','1.2-007','1.3-001','1.3-003','1.3-005','1.3-007','1.4-001','1.4-003','1.4-005','1.4-007','1.5-001','1.5-003','1.5-005','1.5-007','1.6-001','1.6-003','1.6-005','1.6-007'],type:'ok_issue'},
-  {name:'Electrical Room 2.1-2.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['Lineup 2.1C','Lineup 2.1A','Lineup 2.1B','Lineup 2.2A','Lineup 2.2B','Lineup 2.3A','Lineup 2.3B','Lineup 2.4A','Lineup 2.4B','Lineup 2.5A','Lineup 2.5B','Lineup 2.6A','Lineup 2.6B'],type:'ok_issue'},
-  {name:'DAHU Gallery 2 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-001','2.1-003','2.1-005','2.1-007','2.1-009','2.2-001','2.2-003','2.2-005','2.2-007','2.3-001','2.3-003','2.3-005','2.3-007','2.4-001','2.4-003','2.4-005','2.4-007','2.5-001','2.5-003','2.5-005','2.5-007','2.6-001','2.6-003','2.6-005','2.6-007'],type:'ok_issue'},
-  {name:'DAHU Gallery 1 (Evens)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. VESDA not in alarm.',cols:['1.1-002','1.1-004','1.1-006','1.1-008','1.1-010','1.2-002','1.2-004','1.2-006','1.2-008','1.3-002','1.3-004','1.3-006','1.3-008','1.4-002','1.4-004','1.4-006','1.4-008','1.5-002','1.5-004','1.5-006','1.5-008','1.6-002','1.6-004','1.6-006','1.6-008'],type:'ok_issue'},
-  {name:'DAHU Gallery 2 (Evens)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-002','2.1-004','2.1-006','2.1-008','2.1-010','2.2-002','2.2-004','2.2-006','2.2-008','2.3-002','2.3-004','2.3-006','2.3-008','2.4-002','2.4-004','2.4-006','2.4-008','2.5-002','2.5-004','2.5-006','2.5-008','2.6-002','2.6-004','2.6-006','2.6-008'],type:'ok_issue'},
-  {name:'Fire Riser Room',desc:'All valves are in the correct state, no leakages, line pressure 140-150 PSI, no unexpected alarms on FCP. Check Nitrogen generator pressure 20-62 PSI, Air compressor 120-175 PSI, all zones have water and prime pressure 125-150 PSI, and air pressure 15-25 PSI.',cols:['Valves','Pressure','FACP','Nitrogen Gen'],type:'exp_unexp'},
-  {name:'IW Room',desc:'All equipment in auto, free of alarms. Check for leaks/debris. Line pressure 35-40 PSI, MIOX tank >75%, IW tanks >90%. Inspect pump skids for proper operation and no unusual noise.',cols:['Pump Skid 1','Pump Skid 2','Miox Skid','Tanks'],type:'exp_unexp'},
-  {name:'Roof',desc:'Inspect Exhaust Fans, RTUs, Lightning Protection Grid, and lighting. Verify equipment functioning, no abnormal noise or leaks. Roof access Mon-Fri only, clear weather/no wind. Two personnel required for roof access.',cols:['EFs','RTU','LPG','Lighting'],type:'ok_issue'},
-  {name:'Data Hall',desc:'Check PDCs, power shelves, MaxCool panels, VESDA. PDC: verify both sources available, catcher load <4 Amps, fans working, grounding intact. Walk hot and cold aisles checking for water drips, unusual noise, or temperature anomalies. Verify VESDA is not in alarm.',cols:[],type:'notes_only'}
+  {name:'Office Area',desc:'Check all sub-zones: Bullpen, MDF Room, MMR (if applicable), Breakroom, Conference Rooms, Electrical Closet, Corridors, ACS/MaxCool panels, Fire Alarm Panel. Verify systems are free of unexpected alarms, doors are secured, and EPMS is operational.',cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel'],type:'ok_issue',cheatSheet:'ACS panels: No alarms, temp setpoints normal | MaxCool: No alarms | EPMS: Online, no comm faults | Fire Alarm Panel: No active alarms, system normal | MDF Room: Temp 64-75°F, humidity 40-60%'},
+  {name:'Medium Voltage Switchgear A and B',desc:'Check that all breakers are in normal alignment, FLoReS is in AUTO, relay status is good, and free of alarms. Check Controls UPS Voltage (110 Vdc - 140 Vdc). Verify no audible or visual alarms present.',cols:['Breaker Status','FLoReS','UPS','Audible/Visual'],type:'ok_issue',cheatSheet:'All breakers: Normal alignment (closed/open per lineup) | FLoReS: AUTO mode | Controls UPS Voltage: 110-140 Vdc | Relay status: Good (no trip flags) | No audible or visual alarms'},
+  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1C','XMFR 1.1C','GEN 1.1A','XMFR 1.1A','GEN 1.1B','XMFR 1.1B','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp',cheatSheet:'Gen status: AUTO, no alarms | Battery voltage: 24-28 Vdc | Coolant temp: >100°F | Block heater: ON | Fuel level: >80% | Oil level: Normal range | E-Stop: NOT pressed | Ball valve: OPEN | XFMR winding temp: <105°C | XFMR liquid temp: <95°C | XFMR liquid level: Normal | XFMR pressure: 0-7 PSI'},
+  {name:'Diesel Fuel System',desc:'Check for leaks in fuel piping, tank, and pumps. Ensure pumps are in auto and free of alarms. Verify fuel level is above 80%. Inspect piping connections, valves, and containment area for signs of leakage or debris.',cols:['Piping','Tank','Pumps','Audible/Visual'],type:'exp_unexp',cheatSheet:'Fuel level: >80% | Pumps: AUTO, no alarms | Piping: No leaks | Containment: No accumulation | Day tank level: Normal | Transfer pump: AUTO'},
+  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check Fuel, Oil, and Coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, ball valve is open, no leaks or debris. Battery voltage 24-28 Vdc, coolant temp >100°F. XFMR: verify winding temp, liquid temp, liquid level, and pressure are within normal range.',cols:['GEN 2.1C','XMFR 2.1C','GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.4B','XFMR 2.4B','GEN 2.4A','XFMR 2.4A','GEN 2.3B','XFMR 2.3B','GEN 2.3A','XFMR 2.3A','GEN 2.2B','XMFR 2.2B','GEN 2.2A','XMFR 2.2A','GEN 2.1B','XMFR 2.1B','GEN 2.1A','XMFR 2.1A'],type:'exp_unexp',cheatSheet:'Gen status: AUTO, no alarms | Battery voltage: 24-28 Vdc | Coolant temp: >100°F | Block heater: ON | Fuel level: >80% | Oil level: Normal range | E-Stop: NOT pressed | Ball valve: OPEN | XFMR winding temp: <105°C | XFMR liquid temp: <95°C | XFMR liquid level: Normal | XFMR pressure: 0-7 PSI'},
+  {name:'Electrical Room 1.1-1.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS/HUPS, DLB, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['HSSB','Lineup 1.1C','Lineup 1.1A','Lineup 1.1B','Lineup 1.2A','Lineup 1.2B','Lineup 1.3A','Lineup 1.3B','Lineup 1.4A','Lineup 1.4B','Lineup 1.5A','Lineup 1.5B','Lineup 1.6A','Lineup 1.6B'],type:'ok_issue',cheatSheet:'All USBs: Normal alignment, no alarms | ATS: AUTO, source available | COPs: Closed, no trip | CUPS/HUPS: Online, battery OK | DLB: Normal | AMCOP/BACOP: Closed | VESDA: No alarm (Alert/Action/Fire1/Fire2 all clear) | ACS/MaxCool: No alarms, temp 64-75°F'},
+  {name:'DAHU Gallery 1 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['1.1-001','1.1-003','1.1-005','1.1-007','1.1-009','1.2-001','1.2-003','1.2-005','1.2-007','1.3-001','1.3-003','1.3-005','1.3-007','1.4-001','1.4-003','1.4-005','1.4-007','1.5-001','1.5-003','1.5-005','1.5-007','1.6-001','1.6-003','1.6-005','1.6-007'],type:'ok_issue',cheatSheet:'All DAHUs: AUTO, running, no alarms | Supply air: 55-65°F | Return air: <95°F | No water leaks | VFDs: AUTO, no faults | VESDA: No alarm | Dampers: Normal position | Differential pressure: Within spec'},
+  {name:'Electrical Room 2.1-2.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['Lineup 2.1C','Lineup 2.1A','Lineup 2.1B','Lineup 2.2A','Lineup 2.2B','Lineup 2.3A','Lineup 2.3B','Lineup 2.4A','Lineup 2.4B','Lineup 2.5A','Lineup 2.5B','Lineup 2.6A','Lineup 2.6B'],type:'ok_issue',cheatSheet:'All USBs: Normal alignment, no alarms | ATS: AUTO, source available | COPs: Closed, no trip | CUPS: Online, battery OK | DLB: Normal | AMCOP/BACOP: Closed | VESDA: No alarm | ACS/MaxCool: No alarms, temp 64-75°F'},
+  {name:'DAHU Gallery 2 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-001','2.1-003','2.1-005','2.1-007','2.1-009','2.2-001','2.2-003','2.2-005','2.2-007','2.3-001','2.3-003','2.3-005','2.3-007','2.4-001','2.4-003','2.4-005','2.4-007','2.5-001','2.5-003','2.5-005','2.5-007','2.6-001','2.6-003','2.6-005','2.6-007'],type:'ok_issue',cheatSheet:'All DAHUs: AUTO, running, no alarms | Supply air: 55-65°F | Return air: <95°F | No water leaks | VFDs: AUTO, no faults | VESDA: No alarm | Dampers: Normal position'},
+  {name:'DAHU Gallery 1 (Evens)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. VESDA not in alarm.',cols:['1.1-002','1.1-004','1.1-006','1.1-008','1.1-010','1.2-002','1.2-004','1.2-006','1.2-008','1.3-002','1.3-004','1.3-006','1.3-008','1.4-002','1.4-004','1.4-006','1.4-008','1.5-002','1.5-004','1.5-006','1.5-008','1.6-002','1.6-004','1.6-006','1.6-008'],type:'ok_issue',cheatSheet:'All DAHUs: AUTO, running, no alarms | Supply air: 55-65°F | Return air: <95°F | No water leaks | VFDs: AUTO, no faults | VESDA: No alarm | Dampers: Normal position'},
+  {name:'DAHU Gallery 2 (Evens)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-002','2.1-004','2.1-006','2.1-008','2.1-010','2.2-002','2.2-004','2.2-006','2.2-008','2.3-002','2.3-004','2.3-006','2.3-008','2.4-002','2.4-004','2.4-006','2.4-008','2.5-002','2.5-004','2.5-006','2.5-008','2.6-002','2.6-004','2.6-006','2.6-008'],type:'ok_issue',cheatSheet:'All DAHUs: AUTO, running, no alarms | Supply air: 55-65°F | Return air: <95°F | No water leaks | VFDs: AUTO, no faults | VESDA: No alarm | Dampers: Normal position'},
+  {name:'Fire Riser Room',desc:'All valves are in the correct state, no leakages, line pressure 140-150 PSI, no unexpected alarms on FCP. Check Nitrogen generator pressure 20-62 PSI, Air compressor 120-175 PSI, all zones have water and prime pressure 125-150 PSI, and air pressure 15-25 PSI.',cols:['Valves','Pressure','FACP','Nitrogen Gen'],type:'exp_unexp',cheatSheet:'Line pressure: 140-150 PSI | Nitrogen generator: 20-62 PSI | Air compressor: 120-175 PSI | Zone water pressure: 125-150 PSI | Zone air pressure: 15-25 PSI | All valves: Correct position (open/closed per tag) | FCP: No alarms | No leaks'},
+  {name:'IW Room',desc:'All equipment in auto, free of alarms. Check for leaks/debris. Line pressure 35-40 PSI, MIOX tank >75%, IW tanks >90%. Inspect pump skids for proper operation and no unusual noise.',cols:['Pump Skid 1','Pump Skid 2','Miox Skid','Tanks'],type:'exp_unexp',cheatSheet:'Line pressure: 35-40 PSI | MIOX tank: >75% full | IW tanks: >90% full | All pumps: AUTO, no alarms | No leaks or debris | No unusual noise'},
+  {name:'Roof',desc:'Inspect Exhaust Fans, RTUs, Lightning Protection Grid, and lighting. Verify equipment functioning, no abnormal noise or leaks. Roof access Mon-Fri only, clear weather/no wind. Two personnel required for roof access.',cols:['EFs','RTU','LPG','Lighting'],type:'ok_issue',cheatSheet:'Exhaust Fans: Running, no vibration | RTUs: Normal operation | Lightning protection: Intact | Lighting: Functional | Access: Mon-Fri only, clear weather, 2 personnel required'},
+  {name:'Data Hall',desc:'Check PDCs, power shelves, MaxCool panels, VESDA. PDC: verify both sources available, catcher load <4 Amps, fans working, grounding intact. Walk hot and cold aisles checking for water drips, unusual noise, or temperature anomalies. Verify VESDA is not in alarm.',cols:[],type:'notes_only',cheatSheet:'PDCs: Both sources available | Catcher load: <4 Amps | PDC fans: Running | Grounding: Intact | VESDA: No alarm | MaxCool: No alarms | Hot aisle: <104°F | Cold aisle: 64-80°F | No water drips | No unusual noise'}
 ];
 var activeSections=defaultSections;
 
@@ -669,6 +692,7 @@ function beginRounds(){
     },function(){if(loaded)return;loaded=true;clearTimeout(timeout);activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);});
   }else{activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);}
   }catch(err){document.getElementById('btnBegin').textContent='ERROR: '+err.message;document.getElementById('btnBegin').style.background='var(--red)';}
+}
 
 function startRoundsWithSections(selectedBldg){
   try{
@@ -891,16 +915,21 @@ function renderWalkthrough(){
     if(p<activeSections.length-1)sHtml+='<div class="step-connector'+(roundData.sections[p].status==='complete'?' completed':'')+'"></div>';
   }
   document.getElementById('walkStepper').innerHTML=sHtml;
-  // Walk content
+  // Cheat sheet
   var html='';
+  if(sec.cheatSheet){
+    html+='<div class="cheat-sheet-toggle" onclick="this.classList.toggle(\'open\')"><span class="cheat-sheet-arrow">&#9654;</span> Reference Values</div>';
+    html+='<div class="cheat-sheet-content"><div class="cheat-sheet-content-inner">';
+    var vals=sec.cheatSheet.split(' | ');
+    for(var v=0;v<vals.length;v++)html+='<div><strong>'+escHtml(vals[v].split(':')[0])+':</strong>'+escHtml(vals[v].split(':').slice(1).join(':'))+'</div>';
+    html+='</div></div>';
+  }
+  // Walk content
   if(sec.type==='notes_only'){
-    html+='<button class="btn-allok" onclick="markAllOk()">ALL OK &#9989;</button>';
-    html+='<div class="section-notes"><label>Notes for '+escHtml(sec.name)+'</label>';
-    html+='<textarea id="notesOnly" inputmode="text" placeholder="Enter notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div>';
+    html+=renderMultiNotes(currentSection,sec.name);
   } else {
     var okLabel=sec.type==='exp_unexp'?'Expected':'OK';
     var issueLabel=sec.type==='exp_unexp'?'Unexpected':'Issue';
-    html+='<button class="btn-allok" onclick="markAllOk()">ALL '+okLabel.toUpperCase()+' &#9989;</button>';
     html+='<div class="item-list">';
     for(var idx=0;idx<sec.cols.length;idx++){
       var item=secData.items[idx];var statusCls='';var statusText='';
@@ -918,7 +947,6 @@ function renderWalkthrough(){
       html+='<div class="item-content"><div class="item-name"><span>'+escHtml(sec.cols[idx])+'</span>';
       if(statusText)html+='<span class="status-badge '+statusCls+'">'+statusText+'</span>';
       html+='</div></div>';
-      // Issue detail with Edit/Done
       if(item.status==='issue'||item.status==='unexpected'){
         var noteKey=currentSection+'-'+idx;
         var locked=item.noteLocked||false;
@@ -928,7 +956,7 @@ function renderWalkthrough(){
           html+='<div class="issue-actions">';
           html+='<button class="issue-btn btn-edit-note" onclick="unlockNote('+currentSection+','+idx+')">&#9998; Edit</button>';
         } else {
-          html+='<textarea class="issue-note" id="note-'+currentSection+'-'+idx+'" inputmode="text" placeholder="Describe the issue..." oninput="updateItemNote('+currentSection+','+idx+',this.value)">'+escHtml(item.note)+'</textarea>';
+          html+='<textarea class="issue-note" id="note-'+currentSection+'-'+idx+'" inputmode="text" placeholder="Describe the issue..." oninput="updateItemNote('+currentSection+','+idx+',this.value)">'+escHtml(item.note||'')+'</textarea>';
           html+='<div class="issue-actions">';
           html+='<button class="issue-btn btn-done" onclick="lockNote('+currentSection+','+idx+')">&#9989; Done</button>';
         }
@@ -938,7 +966,7 @@ function renderWalkthrough(){
         html+='</div>';
         if(photos.length>0){
           html+='<div class="photo-thumbs">';
-          for(var pi=0;pi<photos.length;pi++)html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+photos[pi]+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">&#10005;</button></div>';
+          for(var pi=0;pi<photos.length;pi++)html+='<div class="photo-thumb-wrap"><img class="photo-thumb" src="'+photos[pi]+'" onclick="previewPhoto(\''+photoKey+'\','+pi+')"><button class="photo-remove" onclick="removePhoto(\''+photoKey+'\','+pi+')">x</button></div>';
           html+='</div>';
         }
         html+='</div>';
@@ -946,14 +974,16 @@ function renderWalkthrough(){
       html+='</div>';
     }
     html+='</div>';
-    html+='<div class="section-notes"><label>Section Notes (optional)</label>';
-    html+='<textarea inputmode="text" placeholder="General notes..." oninput="updateSectionNotes('+currentSection+',this.value)">'+escHtml(secData.notes)+'</textarea></div>';
+    // Remaining OK/Expected button at bottom (KC suggestion)
+    var remaining=0;for(var ri=0;ri<secData.items.length;ri++){if(!secData.items[ri].status)remaining++;}
+    if(remaining>0)html+='<button class="btn-remaining" onclick="markRemainingOk()">REMAINING '+okLabel.toUpperCase()+' ('+remaining+') &#9989;</button>';
+    // Multi-note section notes
+    html+=renderMultiNotes(currentSection,sec.name);
   }
   document.getElementById('walkContent').innerHTML=html;
   if(sec.type!=='notes_only')for(var si=0;si<sec.cols.length;si++)attachSwipe(document.getElementById('card-'+si),currentSection,si,sec.type);
   updateNavButtons();
 }
-
 /* ===== NOTE LOCK/UNLOCK ===== */
 function lockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=true;renderWalkthrough();}
 function unlockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=false;renderWalkthrough();}
@@ -997,7 +1027,53 @@ function markAllOk(){
   renderWalkthrough();renderZoneList();updateDashboardMetrics();
 }
 function updateItemNote(sIdx,iIdx,val){roundData.sections[sIdx].items[iIdx].note=val;updateNavButtons();}
-function updateSectionNotes(sIdx,val){roundData.sections[sIdx].notes=val;}
+
+function updateSectionNotes(sIdx,val){/* legacy - kept for compat */}
+function renderMultiNotes(sIdx,secName){
+  var secData=roundData.sections[sIdx];
+  // Migrate legacy string notes to array
+  if(typeof secData.notes==='string'&&secData.notes.trim()){secData.notesList=[secData.notes.trim()];secData.notes='';}
+  if(!secData.notesList)secData.notesList=[];
+  var html='<div class="section-notes"><label>Section Notes</label>';
+  html+='<div class="note-entry-area">';
+  html+='<textarea id="noteInput-'+sIdx+'" inputmode="text" placeholder="Add a note..."></textarea>';
+  html+='<button class="note-submit-btn" onclick="submitSectionNote('+sIdx+')">Submit</button>';
+  html+='</div>';
+  if(secData.notesList.length>0){
+    html+='<div class="saved-notes-list">';
+    for(var n=0;n<secData.notesList.length;n++){
+      html+='<div class="saved-note-item"><span class="saved-note-text">'+escHtml(secData.notesList[n])+'</span>';
+      html+='<button class="saved-note-del" onclick="deleteSectionNote('+sIdx+','+n+')">&#10005;</button></div>';
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+function submitSectionNote(sIdx){
+  var inp=document.getElementById('noteInput-'+sIdx);if(!inp)return;
+  var text=inp.value.trim();if(!text)return;
+  var secData=roundData.sections[sIdx];
+  if(!secData.notesList)secData.notesList=[];
+  secData.notesList.push(text);
+  // Also store as joined string for backward compat with export
+  secData.notes=secData.notesList.join('\n---\n');
+  inp.value='';renderWalkthrough();showToast('Note saved');
+}
+function deleteSectionNote(sIdx,nIdx){
+  var secData=roundData.sections[sIdx];
+  if(secData.notesList)secData.notesList.splice(nIdx,1);
+  secData.notes=secData.notesList?secData.notesList.join('\n---\n'):'';
+  renderWalkthrough();
+}
+function markRemainingOk(){
+  var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
+  var okStatus=sec.type==='exp_unexp'?'expected':'ok';
+  for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)secData.items[i].status=okStatus;}
+  checkSectionComplete(currentSection);
+  if(currentSection<activeSections.length-1)currentSection++;
+  renderWalkthrough();renderZoneList();updateDashboardMetrics();
+}
 function checkSectionComplete(sIdx){
   var secData=roundData.sections[sIdx];var allDone=true,allOk=true;
   for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)allDone=false;if(secData.items[i].status==='issue'||secData.items[i].status==='unexpected')allOk=false;}
@@ -1424,4 +1500,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v2.1 -->
+<!-- v2.2 -->
