@@ -1728,8 +1728,31 @@ if(document.getElementById('btnFlipCam'))document.getElementById('btnFlipCam').a
 function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop();});cameraStream=null;}document.getElementById('cameraModal').classList.remove('active');}
 
 /* ===== WINDOWS TABLET KEYBOARD FIX ===== */
+/* ===== KEYBOARD SCROLL FIX ===== */
+function scrollFieldAboveKeyboard(el){
+  // Find the closest scrollable parent
+  var scrollParent=el.parentNode;
+  while(scrollParent&&scrollParent!==document.body){
+    var style=window.getComputedStyle(scrollParent);
+    if((style.overflowY==='auto'||style.overflowY==='scroll')&&scrollParent.scrollHeight>scrollParent.clientHeight){break;}
+    scrollParent=scrollParent.parentNode;
+  }
+  if(!scrollParent||scrollParent===document.body)scrollParent=null;
+  // Get visible height (accounts for keyboard)
+  var visibleH=window.visualViewport?window.visualViewport.height:window.innerHeight;
+  // Get element position
+  var rect=el.getBoundingClientRect();
+  // Target: put the element in the top 30% of visible area
+  var targetY=visibleH*0.25;
+  var offset=rect.top-targetY;
+  if(scrollParent){
+    scrollParent.scrollBy({top:offset,behavior:'smooth'});
+  }else{
+    window.scrollBy({top:offset,behavior:'smooth'});
+  }
+}
 (function(){if('virtualKeyboard' in navigator){navigator.virtualKeyboard.overlaysContent=true;}
-  document.addEventListener('focusin',function(e){var tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}e.target.setAttribute('enterkeyhint','done');var el=e.target;setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},350);}});
+  document.addEventListener('focusin',function(e){var tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}e.target.setAttribute('enterkeyhint','done');var el=e.target;setTimeout(function(){scrollFieldAboveKeyboard(el);},400);}});
 })();
 
 /* ===== SERVICE WORKER ===== */
@@ -1762,4 +1785,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v3.4 -->
+<!-- v3.5 -->
