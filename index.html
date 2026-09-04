@@ -382,6 +382,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <div class="start-label">Date</div>
 <input class="start-input" type="date" id="roundDate">
 <button class="btn-begin" id="btnBegin" disabled onclick="beginRounds()">BEGIN ROUNDS</button>
+<button class="btn-begin" style="background:var(--card);color:var(--accent);border:1px solid var(--accent);margin-top:8px" onclick="openComplianceDirect()">&#128202; Campus Compliance Dashboard</button>
 <div class="recent-section">
 <div class="start-label">Recent Rounds</div>
 <div id="recentList"><div style="color:var(--muted);font-size:14px;text-align:center;padding:24px;">Loading...</div></div>
@@ -453,7 +454,6 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <!-- TAB: HISTORY -->
 <div class="tab-pane" id="tabHistory" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none">
 <div id="historyList"></div>
-</div>
 </div>
 
 <!-- TAB: COMPLIANCE -->
@@ -1172,7 +1172,11 @@ function editRound(fbKey){
 function deleteRound(fbKey){if(!confirm('Delete this round?'))return;deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
 /* ===== COMPLIANCE DASHBOARD ===== */
 function renderCompliance(){
-  if(!db)return;
+  if(!db){
+    document.getElementById('complianceSummary').innerHTML='<div class="compliance-stat" style="grid-column:1/4"><div class="compliance-stat-val">&#8987;</div><div class="compliance-stat-lbl">Connecting to Firebase...</div></div>';
+    document.getElementById('complianceGrid').innerHTML='';
+    setTimeout(renderCompliance,1000);return;
+  }
   var today=new Date();
   var todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   var pending=0;var results={};
@@ -1269,7 +1273,39 @@ function shareLastFile(){
 }
 function downloadLastFile(){if(!lastSubmitBlob)return;downloadBlob(lastSubmitBlob,lastSubmitFilename);showToast('File downloaded!');}
 
-function resetApp(){roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;lastSubmitBlob=null;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
+function openComplianceDirect(){
+  activeBuilding='_compliance_';
+  showScreen('mainScreen');
+  // Hide zones-specific UI
+  document.getElementById('dashHeader').style.display='none';
+  document.getElementById('simBanner').style.display='none';
+  switchMainTab('compliance');
+  // Hide non-compliance drawer buttons
+  var btns=document.querySelectorAll('.drawer-btn');
+  for(var i=0;i<btns.length;i++){
+    var tab=btns[i].getAttribute('data-tab');
+    if(tab!=='compliance')btns[i].style.display='none';
+    else btns[i].classList.add('active');
+  }
+  // Add a back button
+  var nav=document.getElementById('drawerNav');
+  if(!document.getElementById('btnBackToStart')){
+    var backBtn=document.createElement('button');
+    backBtn.id='btnBackToStart';backBtn.className='drawer-btn';
+    backBtn.innerHTML='&#8592; Back';
+    backBtn.onclick=function(){resetApp();};
+    nav.insertBefore(backBtn,nav.firstChild);
+  }
+}
+
+function resetApp(){
+  // Restore drawer buttons visibility
+  var btns=document.querySelectorAll('.drawer-btn');
+  for(var i=0;i<btns.length;i++)btns[i].style.display='';
+  var backBtn=document.getElementById('btnBackToStart');
+  if(backBtn)backBtn.remove();
+  document.getElementById('dashHeader').style.display='';
+roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;lastSubmitBlob=null;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
 
 /* ===== DARK/LIGHT MODE ===== */
 function toggleMode(){var btn=document.getElementById('modeBtn');if(document.body.classList.contains('light-mode')){document.body.classList.remove('light-mode');btn.innerHTML='&#9728;&#65039; Light';try{localStorage.setItem('sbn-rounds-theme','dark');}catch(e){}}else{document.body.classList.add('light-mode');btn.innerHTML='&#127769; Dark';try{localStorage.setItem('sbn-rounds-theme','light');}catch(e){}}}
