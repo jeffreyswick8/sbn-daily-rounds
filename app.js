@@ -989,8 +989,8 @@ function renderArchivedRounds(rounds){
     html+='<div class="recent-card" style="border-left:3px solid var(--amber)"><div class="recent-info"><div class="r-bldg">'+(r.building||'?')+' &mdash; '+(r.date||'')+'</div>';
     html+='<div class="r-meta">'+(r.technician||'')+' | '+(r.shift||'')+' | <span style="color:var(--amber)">&#128230; Archived</span></div></div>';
     html+='<div class="recent-actions">';
-    html+='<button style="padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(34,197,94,0.15);color:var(--green)" onclick="restoreRound(''+escHtml(r._fbKey||'').replace(/'/g,"\'")+'')">Restore</button>';
-    html+='<button class="btn-del" onclick="deleteRound(''+escHtml(r._fbKey||'').replace(/'/g,"\'")+'')">&#128465;</button>';
+    html+='<button style="padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(34,197,94,0.15);color:var(--green)" onclick="restoreRound(''+escHtml(r._fbKey||'').replace(/\x27/g,"\'")+'')">Restore</button>';
+    html+='<button class="btn-del" onclick="deleteRound(''+escHtml(r._fbKey||'').replace(/\x27/g,"\'")+'')">&#128465;</button>';
     html+='</div></div>';
   }
   listEl.innerHTML=html;
