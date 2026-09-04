@@ -1254,12 +1254,18 @@ function handleSubmitFile(blob,filename,mimeType){
 /* ===== EXCEL EXPORT ===== */
 function shareFile(){
   var btn=document.getElementById('btnShareFile');
-  if(!lastSubmitBlob){if(btn)btn.textContent='\u26A0 No file to share';return;}
-  if(btn){btn.textContent='Opening share...';btn.style.opacity='0.7';}
+  if(!roundData){if(btn)btn.textContent='\u26A0 No data';return;}
+  if(btn){btn.textContent='Preparing...';btn.style.opacity='0.7';}
+  // Regenerate file fresh at tap time (ensures valid blob + user gesture context)
+  var excelHtml=generateExcel();
+  var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
+  var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});
+  var fname=baseName+'.xls';
   try{
-    var file=new File([lastSubmitBlob],lastSubmitFilename,{type:lastSubmitMime});
+    var file=new File([blob],fname,{type:'application/vnd.ms-excel',lastModified:Date.now()});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      navigator.share({files:[file],title:lastSubmitFilename,text:lastSubmitSummary}).then(function(){
+      if(btn)btn.textContent='Opening share...';
+      navigator.share({files:[file],title:fname,text:lastSubmitSummary||''}).then(function(){
         if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
       }).catch(function(e){
         if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
@@ -1267,23 +1273,21 @@ function shareFile(){
       return;
     }
   }catch(e){}
-  // File share not supported — try text-only share
+  // File share failed — try text only
   if(navigator.share){
     try{
-      navigator.share({title:lastSubmitFilename,text:lastSubmitSummary}).then(function(){
-        if(btn){btn.textContent='\u2705 Summary Shared!';btn.style.opacity='1';}
+      if(btn)btn.textContent='Sharing summary...';
+      navigator.share({title:fname,text:lastSubmitSummary||'Daily Rounds Report'}).then(function(){
+        if(btn){btn.textContent='\u2705 Shared!';btn.style.opacity='1';}
       }).catch(function(e){
         if(btn){btn.textContent='\uD83D\uDCE4 Share Round Report';btn.style.opacity='1';}
       });
       return;
     }catch(e){}
   }
-  // Neither worked — download + mailto
-  downloadBlob(lastSubmitBlob,lastSubmitFilename);
-  var subject=encodeURIComponent(lastSubmitFilename);
-  var body=encodeURIComponent(lastSubmitSummary);
-  window.location.href='mailto:?subject='+subject+'&body='+body;
-  if(btn){btn.textContent='\uD83D\uDCE5 Downloaded — attach to email';btn.style.opacity='1';}
+  // Nothing worked — download + email
+  downloadBlob(blob,fname);
+  if(btn){btn.textContent='\uD83D\uDCE5 Downloaded';btn.style.opacity='1';}
 }
 
 function downloadAgain(){if(lastSubmitBlob)downloadBlob(lastSubmitBlob,lastSubmitFilename);}
@@ -1626,4 +1630,4 @@ loadTheme();initStartScreen();waitForFirebase();
 </script>
 </body>
 </html>
-<!-- v2.7 -->
+<!-- v2.8 -->
