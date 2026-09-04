@@ -1142,56 +1142,37 @@ if(document.getElementById('btnFlipCam'))document.getElementById('btnFlipCam').a
 });
 function closeCameraModal(){if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop();});cameraStream=null;}document.getElementById('cameraModal').classList.remove('active');}
 
-/* ===== WINDOWS TABLET KEYBOARD FIX ===== */
 /* ===== KEYBOARD SCROLL FIX ===== */
 (function(){
-  var origHeight=window.innerHeight;
-  var activeField=null;
-  // Track which field is focused
+  var spacer=null;
   document.addEventListener('focusin',function(e){
     var tag=e.target.tagName;
-    if(tag==='INPUT'||tag==='TEXTAREA'){activeField=e.target;e.target.setAttribute('enterkeyhint','done');}
-  });
-  document.addEventListener('focusout',function(){activeField=null;});
-  // Use visualViewport resize to detect keyboard
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',function(){
-      if(!activeField)return;
-      var vv=window.visualViewport;
-      var kbHeight=origHeight-vv.height;
-      if(kbHeight>100){
-        // Keyboard is open — scroll the field into view
-        // Find the scrollable parent
-        var sp=activeField.parentNode;
-        while(sp&&sp!==document.body){
-          var os=window.getComputedStyle(sp).overflowY;
-          if((os==='auto'||os==='scroll')&&sp.scrollHeight>sp.clientHeight)break;
-          sp=sp.parentNode;
-        }
-        if(!sp||sp===document.body)sp=document.documentElement;
-        // Add temporary bottom padding so content can scroll past keyboard
-        sp.style.paddingBottom=kbHeight+'px';
-        // Scroll the field to visible area
-        setTimeout(function(){
-          if(activeField){
-            var rect=activeField.getBoundingClientRect();
-            var targetY=vv.height*0.3;
-            var scrollBy=rect.top-targetY;
-            sp.scrollBy({top:scrollBy,behavior:'smooth'});
-          }
-        },50);
-      }else{
-        // Keyboard closed — remove padding
-        var containers=document.querySelectorAll('.content,[id*=Content]');
-        for(var i=0;i<containers.length;i++)containers[i].style.paddingBottom='';
+    if(tag==='INPUT'||tag==='TEXTAREA'){
+      e.target.setAttribute('enterkeyhint','done');
+      // Add spacer to create room for scrolling
+      if(!spacer){
+        spacer=document.createElement('div');
+        spacer.id='kbSpacer';
+        spacer.style.cssText='height:50vh;flex-shrink:0';
       }
-    });
-  }
+      // Find the scrollable parent and append spacer
+      var sp=e.target.closest('.content')||e.target.closest('[id*=Content]')||e.target.parentNode;
+      if(sp&&!sp.querySelector('#kbSpacer'))sp.appendChild(spacer);
+      // Scroll element into view after keyboard opens
+      var el=e.target;
+      setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},400);
+    }
+  });
+  document.addEventListener('focusout',function(){
+    // Remove spacer after keyboard closes
+    setTimeout(function(){
+      var s=document.getElementById('kbSpacer');
+      if(s)s.remove();
+    },200);
+  });
+  // Also handle virtualKeyboard API for Windows tablets
+  if('virtualKeyboard' in navigator){navigator.virtualKeyboard.overlaysContent=true;}
 })();
-(function(){if('virtualKeyboard' in navigator){navigator.virtualKeyboard.overlaysContent=true;}
-  document.addEventListener('focusin',function(e){var tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable){if('virtualKeyboard' in navigator){try{navigator.virtualKeyboard.show();}catch(ex){}}e.target.setAttribute('enterkeyhint','done');}});
-})();
-
 /* ===== SERVICE WORKER ===== */
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 
