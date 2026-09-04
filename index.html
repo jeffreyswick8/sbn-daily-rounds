@@ -671,7 +671,7 @@ function beginRounds(){
   }catch(err){document.getElementById('btnBegin').textContent='ERROR: '+err.message;document.getElementById('btnBegin').style.background='var(--red)';}
 }
 function startRoundsWithSections(selectedBldg){
-  var secs=[];
+  try{
   for(var i=0;i<activeSections.length;i++){
     var items=[];for(var j=0;j<activeSections[i].cols.length;j++)items.push({name:activeSections[i].cols[j],status:'',note:'',photos:0,noteLocked:false});
     secs.push({name:activeSections[i].name,status:'pending',allOk:false,completedBy:'',completedAt:'',notes:'',items:items});
@@ -681,6 +681,7 @@ function startRoundsWithSections(selectedBldg){
   document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;
   showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
   switchMainTab('zones');
+  }catch(e){alert('startRounds error: '+e.message);showScreen('startScreen');}
 }
 
 /* ===== SIM TICKET ===== */
@@ -712,7 +713,7 @@ function getZoneStatusInfo(sIdx){
 function renderZoneList(){
   var list=document.getElementById('zoneList');var html='';
   for(var i=0;i<zoneMap.length;i++){
-    var z=zoneMap[i];var sec=activeSections[z.sIdx];var info=getZoneStatusInfo(z.sIdx);
+    var z=zoneMap[i];var sec=activeSections[z.sIdx];if(!sec)continue;var info=getZoneStatusInfo(z.sIdx);
     // Filter
     if(currentFilter==='walked'&&!info.walked)continue;
     if(currentFilter==='overdue'&&!info.overdue)continue;
