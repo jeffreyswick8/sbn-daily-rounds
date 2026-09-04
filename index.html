@@ -21,8 +21,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
 /* ===== HEADER ===== */
 .header{background:var(--surface);padding:14px 20px;border-bottom:2px solid var(--accent);text-align:center;flex-shrink:0;position:relative}
-.header h1{font-size:20px;color:var(--accent);font-weight:700;letter-spacing:0.5px}
-.header .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.header h1{font-size:20px;color:var(--accent);font-weight:700;letter-spacing:0.5px;padding:0 48px}
+.header .sub{font-size:12px;color:var(--muted);margin-top:3px;padding:0 48px}
 .mode-btn{position:absolute;right:14px;top:14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;min-height:36px}
 body.light-mode .mode-btn{background:rgba(0,0,0,0.06);color:#1a1a1a;border-color:rgba(0,0,0,0.12)}
 
@@ -533,7 +533,6 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <button class="btn-share" id="btnShareFile" style="display:none;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:12px;min-height:56px" onclick="shareFile()">&#128228; Share Round Report</button>
 <button class="btn-download" id="btnDownloadFile" style="display:none;width:100%;padding:16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;min-height:56px" onclick="downloadAgain()">&#128229; Download Again</button>
 <button class="btn-handoff" style="width:100%;padding:16px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;min-height:56px" onclick="startHandoffFromDone()">&#128221; Leave Handoff Note</button>
-<button style="width:100%;padding:12px;background:none;color:var(--amber);border:1px dashed var(--amber);border-radius:var(--radius);font-size:13px;cursor:pointer;margin-top:12px" onclick="diagnoseShare()">&#128269; Diagnose Share Issue</button>
 <button class="btn-new-round" onclick="resetApp()">Start New Round</button>
 </div>
 </div>

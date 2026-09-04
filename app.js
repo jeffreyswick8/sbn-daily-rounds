@@ -762,67 +762,6 @@ function fallbackCopy(text){
   try{document.execCommand('copy');showToast('Summary copied!');}catch(e){showToast('Could not copy â€” long press to select text');}
   document.body.removeChild(ta);
 }
-function diagnoseShare(){
-  var results=[];
-  var log=function(label,val){results.push('<div style="margin:4px 0"><strong>'+label+':</strong> <span style="color:'+(val==='YES'||val==='true'?'var(--green)':'var(--red)')+'">'+val+'</span></div>');};
-  // 1. Check navigator.share exists
-  log('navigator.share exists', typeof navigator.share==='function'?'YES':'NO');
-  // 2. Check navigator.canShare exists
-  log('navigator.canShare exists', typeof navigator.canShare==='function'?'YES':'NO');
-  // 3. Check if we can create a File
-  var fileOk=false;var fileErr='';
-  try{var f=new File(['test'],'test.txt',{type:'text/plain'});fileOk=true;}catch(e){fileErr=e.message;}
-  log('File() constructor works', fileOk?'YES':'NO â€” '+fileErr);
-  // 4. Check if we can create a Blob
-  var blobOk=false;
-  try{var b=new Blob(['test'],{type:'text/plain'});blobOk=true;}catch(e){}
-  log('Blob() constructor works', blobOk?'YES':'NO');
-  // 5. Check secure context
-  log('isSecureContext', window.isSecureContext?'YES':'NO');
-  // 6. Check if canShare with text
-  if(navigator.canShare){
-    try{log('canShare({text})', navigator.canShare({text:'test'})?'YES':'NO');}catch(e){log('canShare({text})', 'ERROR: '+e.message);}
-  }
-  // 7. Check if canShare with file
-  if(navigator.canShare){
-    try{
-      var tf=new File(['test'],'test.txt',{type:'text/plain'});
-      log('canShare({files:[txt]})', navigator.canShare({files:[tf]})?'YES':'NO');
-    }catch(e){log('canShare({files:[txt]})', 'ERROR: '+e.message);}
-    try{
-      var xf=new File(['test'],'test.xls',{type:'application/vnd.ms-excel'});
-      log('canShare({files:[xls]})', navigator.canShare({files:[xf]})?'YES':'NO');
-    }catch(e){log('canShare({files:[xls]})', 'ERROR: '+e.message);}
-  }
-  // 8. User agent
-  log('User Agent', navigator.userAgent.substring(0,120));
-  // 9. Try an actual share with just text
-  results.push('<div style="margin:8px 0;border-top:1px solid var(--border);padding-top:8px"><strong>Live test â€” sharing text only...</strong></div>');
-  // Show results so far
-  var panel=document.getElementById('diagPanel');
-  if(!panel){panel=document.createElement('div');panel.id='diagPanel';panel.style.cssText='margin-top:12px;background:var(--surface);border:1px solid var(--amber);border-radius:var(--radius);padding:14px;font-size:12px;font-family:monospace;max-height:400px;overflow-y:auto';
-    var dc=document.querySelector('.done-content');if(dc)dc.appendChild(panel);
-  }
-  panel.innerHTML=results.join('');
-  // Now try actual share
-  if(navigator.share){
-    navigator.share({title:'Test',text:'SBN Daily Rounds test share'}).then(function(){
-      panel.innerHTML+='<div style="color:var(--green)"><strong>TEXT SHARE: SUCCESS</strong></div>';
-    }).catch(function(e){
-      panel.innerHTML+='<div style="color:var(--red)"><strong>TEXT SHARE FAILED: '+e.name+' â€” '+e.message+'</strong></div>';
-      // Try file share too
-      try{
-        var tf=new File(['test content'],'test.txt',{type:'text/plain'});
-        navigator.share({files:[tf],title:'Test',text:'test'}).then(function(){
-          panel.innerHTML+='<div style="color:var(--green)"><strong>FILE SHARE: SUCCESS</strong></div>';
-        }).catch(function(e2){
-          panel.innerHTML+='<div style="color:var(--red)"><strong>FILE SHARE FAILED: '+e2.name+' â€” '+e2.message+'</strong></div>';
-        });
-      }catch(e3){panel.innerHTML+='<div style="color:var(--red)"><strong>FILE SHARE ERROR: '+e3.message+'</strong></div>';}
-    });
-  }else{panel.innerHTML+='<div style="color:var(--red)"><strong>navigator.share NOT AVAILABLE</strong></div>';}
-}
-
 function downloadFileAgain(){
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
