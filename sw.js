@@ -1,4 +1,4 @@
-var CACHE_NAME = 'sbn-rounds-v3';
+var CACHE_NAME = 'sbn-rounds-v4';
 var urlsToCache = [
   '/SBN-Daily-Rounds/',
   '/SBN-Daily-Rounds/index.html',
@@ -8,28 +8,10 @@ var urlsToCache = [
 ];
 
 self.addEventListener('install', function(event) {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
       return cache.addAll(urlsToCache);
-    })
-  );
-});
-
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
-      if (response) { return response; }
-      return fetch(event.request).then(function(networkResponse) {
-        if (networkResponse && networkResponse.status === 200) {
-          var responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      }).catch(function() {
-        return caches.match('/SBN-Daily-Rounds/index.html');
-      });
     })
   );
 });
@@ -44,6 +26,26 @@ self.addEventListener('activate', function(event) {
           return caches.delete(name);
         })
       );
+    }).then(function() {
+      return self.clients.claim();
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    fetch(event.request).then(function(networkResponse) {
+      if (networkResponse && networkResponse.status === 200) {
+        var responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(event.request, responseClone);
+        });
+      }
+      return networkResponse;
+    }).catch(function() {
+      return caches.match(event.request).then(function(cached) {
+        return cached || caches.match('/SBN-Daily-Rounds/index.html');
+      });
     })
   );
 });
