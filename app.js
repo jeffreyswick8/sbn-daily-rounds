@@ -676,6 +676,18 @@ function showSummary(){
     if(sec.notes)html+='<div style="color:var(--muted);margin-top:4px;font-style:italic">Notes: '+sec.notes+'</div>';
     html+='</div></div>';
   });
+  
+  // Show edit trail if exists
+  if(roundData.editLog&&roundData.editLog.length>0){
+    html+='<div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">';
+    html+='<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">\uD83D\uDCDD Edit Trail</div>';
+    for(var el=0;el<roundData.editLog.length;el++){
+      var entry=roundData.editLog[el];
+      var ts=entry.timestamp?new Date(entry.timestamp).toLocaleString():'';
+      html+='<div style="font-size:12px;color:var(--muted);padding:3px 0"><strong>'+escHtml(entry.alias||'Unknown')+'</strong> \u2014 '+escHtml(entry.action||'')+' \u2014 <span style="opacity:0.7">'+ts+'</span></div>';
+    }
+    html+='</div>';
+  }
   html+='<button class="btn-submit" onclick="submitRounds()">SUBMIT ROUNDS</button>';
   html+='<button style="width:100%;padding:16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;min-height:56px" onclick="showScreen(\'mainScreen\');switchMainTab(\'walk\')">&#8592; Back to Walkthrough</button></div>';
   document.getElementById('summaryContent').innerHTML=html;
@@ -706,6 +718,8 @@ function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.
 function handleSubmitFile(blob,filename,mimeType){
   var fbKey='rounds/'+roundData.building+'/'+roundData.date+'/'+Date.now();
   if(isEditing&&editKey)fbKey=editKey;
+  // Log the save action in edit trail
+  if(isEditing&&roundData.editLog){roundData.editLog.push({alias:roundData.lastEditedBy||roundData.technician,timestamp:Date.now(),action:'saved changes'});}
   saveToFirebase(roundData,fbKey);saveFindingsFromRound(roundData,fbKey);
   // Save report for shareable link
   var reportKey=roundData.building+'_'+roundData.date+'_'+Date.now();
@@ -864,7 +878,18 @@ function generateExcel(){
   h+='<tr><td class="summary-hdr" colspan="4">SUMMARY</td></tr>';
   h+='<tr><td class="summary">Total</td><td class="summary">'+totalItems+'</td><td class="summary">OK</td><td class="summary">'+okCount+'</td></tr>';
   h+='<tr><td class="summary">Issues</td><td class="summary" style="'+(issueCount>0?'color:#991b1b;font-weight:bold':'')+'">'+issueCount+'</td><td></td><td></td></tr>';
-  h+='</table></'+'body></html>';return h;
+  
+  // Edit trail in export
+  if(roundData.editLog&&roundData.editLog.length>0){
+    h+='<tr><td colspan="4" style="border:none;height:10px"></td></tr>';
+    h+='<tr><td class="summary-hdr" colspan="4">EDIT TRAIL</td></tr>';
+    for(var el=0;el<roundData.editLog.length;el++){
+      var entry=roundData.editLog[el];
+      var ts=entry.timestamp?new Date(entry.timestamp).toLocaleString():'';
+      h+='<tr><td>'+(entry.alias||'Unknown')+'</td><td>'+(entry.action||'')+'</td><td colspan="2">'+ts+'</td></tr>';
+    }
+  }
+h+='</table></'+'body></html>';return h;
 }
 
 /* ===== RECENT ROUNDS ===== */
@@ -915,16 +940,20 @@ function renderRecentRounds(rounds){
 }
 function editRound(fbKey){
   if(!db){showToast('Cannot edit offline');return;}
-  var currentAlias=document.getElementById('techName')?document.getElementById('techName').value.trim():'';
+  // Prompt for alias before editing
+  var editAlias=prompt('Enter your alias to edit this round:');
+  if(!editAlias||!editAlias.trim()){showToast('Alias required to edit');return;}
+  editAlias=editAlias.trim();
 
   db.ref(fbKey).once('value',function(snap){
     try{
     var data=snap.val();if(!data){showToast('Round not found');return;}
     roundData=data;
-    // Warn if editing another tech's walk
-    if(currentAlias&&data.technician&&currentAlias.toLowerCase()!==data.technician.toLowerCase()){
-      if(!confirm('This walk belongs to '+data.technician+'. Open in view mode? (Changes will save under their name)'))return;
-    }
+    // Initialize edit log if not exists
+    if(!roundData.editLog)roundData.editLog=[];
+    // Log this edit
+    roundData.editLog.push({alias:editAlias,timestamp:Date.now(),action:'opened for edit'});
+    roundData.lastEditedBy=editAlias;roundData.lastEditedAt=Date.now();
     isEditing=true;editKey=fbKey;currentSection=0;photoStore={};noteEditState={};
     activeBuilding=roundData.building;
     // Load building sections before opening (handles different section configs)
