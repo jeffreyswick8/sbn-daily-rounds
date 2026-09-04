@@ -669,9 +669,10 @@ function beginRounds(){
     },function(){if(loaded)return;loaded=true;clearTimeout(timeout);activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);});
   }else{activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);}
   }catch(err){document.getElementById('btnBegin').textContent='ERROR: '+err.message;document.getElementById('btnBegin').style.background='var(--red)';}
-}
+
 function startRoundsWithSections(selectedBldg){
   try{
+  var secs=[];
   for(var i=0;i<activeSections.length;i++){
     var items=[];for(var j=0;j<activeSections[i].cols.length;j++)items.push({name:activeSections[i].cols[j],status:'',note:'',photos:0,noteLocked:false});
     secs.push({name:activeSections[i].name,status:'pending',allOk:false,completedBy:'',completedAt:'',notes:'',items:items});
