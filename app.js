@@ -69,6 +69,126 @@ var mvnrNotes={
 
 /* ===== FIREBASE ===== */
 function initFirebase(){try{var app=firebase.initializeApp({apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6',storageBucket:'budget-tracket-200b6.firebasestorage.app',messagingSenderId:'442984201568',appId:'1:442984201568:web:8203ec4ffbf1a05b283205'},'rounds');db=firebase.app('rounds').database();}catch(e){try{db=firebase.app('rounds').database();}catch(e2){}}}
+/* ===== ROLE-BASED ACCESS CONTROL ===== */
+var defaultRoles={
+  superAdmins:['seschne'],
+  admins:[
+    'agisaleh','cliffbrd','cdover','fabricas','joshmx','kdancler','tjamora','wcpull','zspoljor',
+    'froggi','jdleal','gpoulin','crjrich','darylise','raechc','eagenhay','tmuscato','juspnce'
+  ]
+};
+var roles={superAdmins:[],admins:[]};
+var currentUserRole='eot';
+
+function loadRoles(){
+  // Start with hardcoded defaults
+  roles.superAdmins=defaultRoles.superAdmins.slice();
+  roles.admins=defaultRoles.admins.slice();
+  // Sync from Firebase if available
+  if(db){
+    db.ref('config/roles').once('value',function(snap){
+      var val=snap.val();
+      if(val){
+        if(val.superAdmins&&Array.isArray(val.superAdmins))roles.superAdmins=val.superAdmins;
+        if(val.admins&&Array.isArray(val.admins))roles.admins=val.admins;
+      }else{
+        // Seed Firebase with defaults
+        db.ref('config/roles').set(defaultRoles);
+      }
+    });
+  }
+}
+
+function getUserRole(alias){
+  if(!alias)return 'eot';
+  var a=alias.toLowerCase();
+  for(var i=0;i<roles.superAdmins.length;i++){if(roles.superAdmins[i].toLowerCase()===a)return 'superAdmin';}
+  for(var i=0;i<roles.admins.length;i++){if(roles.admins[i].toLowerCase()===a)return 'admin';}
+  return 'eot';
+}
+
+function canDelete(alias){
+  var role=getUserRole(alias);
+  return role==='superAdmin'||role==='admin';
+}
+
+function canManageAdmins(alias){
+  return getUserRole(alias)==='superAdmin';
+}
+
+function updateCurrentUserRole(){
+  var alias=document.getElementById('techName')?document.getElementById('techName').value.trim():'';
+  currentUserRole=getUserRole(alias);
+  // Show/hide admin features
+  var manageBtn=document.getElementById('btnManageAdmins');
+  if(manageBtn)manageBtn.style.display=canManageAdmins(alias)?'block':'none';
+}
+
+function showAdminPanel(){
+  var alias=document.getElementById('techName')?document.getElementById('techName').value.trim():'';
+  if(!canManageAdmins(alias)){showToast('Super Admin access required');return;}
+  showScreen('adminScreen');renderAdminPanel();
+}
+
+function renderAdminPanel(){
+  var html='<div style="padding:16px">';
+  html+='<h2 style="color:var(--accent);margin-bottom:16px">\u2699\uFE0F Admin Management</h2>';
+  html+='<div style="font-size:12px;color:var(--muted);margin-bottom:16px">Super Admins can add or remove Admin access (CEs/FMs who can delete rounds).</div>';
+  
+  // Super Admins list (read-only display)
+  html+='<div style="margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px">\uD83D\uDD11 Super Admins</div>';
+  for(var i=0;i<roles.superAdmins.length;i++){
+    html+='<div style="background:var(--card);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;font-size:14px;color:var(--amber)">'+escHtml(roles.superAdmins[i])+'</div>';
+  }
+  html+='</div>';
+  
+  // Admins list (editable)
+  html+='<div style="margin-bottom:20px"><div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:8px">\uD83D\uDEE1\uFE0F Admins (CEs & FMs) \u2014 '+roles.admins.length+' total</div>';
+  for(var i=0;i<roles.admins.length;i++){
+    html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">';
+    html+='<span style="font-size:14px">'+escHtml(roles.admins[i])+'</span>';
+    html+='<button style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer" onclick="removeAdmin('+i+')">Remove</button>';
+    html+='</div>';
+  }
+  html+='</div>';
+  
+  // Add new admin
+  html+='<div style="margin-bottom:20px">';
+  html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px">Add Admin</div>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<input type="text" id="newAdminAlias" style="flex:1;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:15px" placeholder="Enter alias...">';
+  html+='<button style="padding:12px 20px;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="addAdmin()">Add</button>';
+  html+='</div></div>';
+  
+  // Back button
+  html+='<button style="width:100%;padding:16px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer" onclick="showScreen(\'startScreen\');loadRecentRounds();">\u2190 Back to Home</button>';
+  html+='</div>';
+  
+  document.getElementById('adminContent').innerHTML=html;
+}
+
+function addAdmin(){
+  var input=document.getElementById('newAdminAlias');
+  if(!input||!input.value.trim()){showToast('Enter an alias');return;}
+  var alias=input.value.trim().toLowerCase();
+  // Check if already exists
+  for(var i=0;i<roles.admins.length;i++){if(roles.admins[i].toLowerCase()===alias){showToast(alias+' is already an admin');return;}}
+  for(var i=0;i<roles.superAdmins.length;i++){if(roles.superAdmins[i].toLowerCase()===alias){showToast(alias+' is a Super Admin');return;}}
+  roles.admins.push(alias);
+  if(db)db.ref('config/roles/admins').set(roles.admins);
+  showToast(alias+' added as Admin');
+  renderAdminPanel();
+}
+
+function removeAdmin(idx){
+  var alias=roles.admins[idx];
+  if(!confirm('Remove '+alias+' from Admin access?'))return;
+  roles.admins.splice(idx,1);
+  if(db)db.ref('config/roles/admins').set(roles.admins);
+  showToast(alias+' removed from Admin');
+  renderAdminPanel();
+}
+
 /* ===== AUTO-SAVE IN-PROGRESS ROUNDS ===== */
 function autoSaveRound(){
   if(!roundData||!db||!activeBuilding)return;
@@ -160,7 +280,7 @@ function initStartScreen(){
   sg.innerHTML='<button class="shift-btn" data-shift="Days">Days</button><button class="shift-btn" data-shift="Nights">Nights</button>';
   var sb=sg.querySelectorAll('.shift-btn');
   for(var m=0;m<sb.length;m++)sb[m].addEventListener('click',function(){var all=sg.querySelectorAll('.shift-btn');for(var n=0;n<all.length;n++)all[n].classList.remove('selected');this.classList.add('selected');checkReady();});
-  document.getElementById('techName').addEventListener('input',checkReady);
+  document.getElementById('techName').addEventListener('input',function(){checkReady();updateCurrentUserRole();});
   document.getElementById('roundDate').value=todayStr();
 }
 function getSelectedBuilding(){var s=document.querySelector('.building-btn.selected');return s?s.getAttribute('data-bldg'):'';}
@@ -941,7 +1061,7 @@ function renderRecentRounds(rounds){
     html+='<div class="recent-actions">';
     html+='<button class="btn-edit" onclick="editRound(\''+escHtml(r._fbKey||'').replace(/'/g,"\\'")+'\')" >&#9999;&#65039; Edit</button>';
     html+='<button style="padding:10px 12px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(245,158,11,0.15);color:var(--amber)" onclick="archiveRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')" >&#128230;</button>';
-    html+='<button class="btn-del" onclick="deleteRound(\''+escHtml(r._fbKey||'').replace(/'/g,"\\'")+'\')" >&#128465; Del</button>';
+    if(canDelete(document.getElementById('techName')?document.getElementById('techName').value.trim():'')){html+='<button class="btn-del" onclick="deleteRound(\''+escHtml(r._fbKey||'').replace(/'/g,"\\'")+'\')" >&#128465; Del</button>';}
     html+='</div></div>';
   }
   document.getElementById('recentList').innerHTML=html;
@@ -983,7 +1103,15 @@ function editRound(fbKey){
     }catch(e){showToast('Error opening round: '+e.message);}
   });
 }
-function deleteRound(fbKey){if(!confirm('Delete this round?'))return;deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
+function deleteRound(fbKey){
+  var delAlias=prompt('Enter your alias to confirm deletion:');
+  if(!delAlias||!delAlias.trim()){showToast('Alias required to delete');return;}
+  delAlias=delAlias.trim();
+  if(!canDelete(delAlias)){showToast('Admin access required to delete rounds. Contact your CE or FM.');return;}
+  if(!confirm('Delete this round? This action cannot be undone.'))return;
+  // Log the deletion
+  if(db){db.ref(fbKey).once('value',function(snap){var data=snap.val();if(data){if(!data.editLog)data.editLog=[];data.editLog.push({alias:delAlias,timestamp:Date.now(),action:'deleted round'});db.ref('audit/deletions/'+Date.now()).set({fbKey:fbKey,deletedBy:delAlias,timestamp:Date.now(),building:data.building||'',date:data.date||'',technician:data.technician||''});}});}
+  deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
 function archiveRound(fbKey){
   if(!db||!fbKey)return;
   if(!confirm('Archive this round? It will be removed from the home screen but saved for later.'))return;
@@ -1036,7 +1164,7 @@ function renderArchivedRounds(rounds){
     html+='<div class="r-meta">'+(r.technician||'')+' | '+(r.shift||'')+' | <span style="color:var(--amber)">&#128230; Archived</span></div></div>';
     html+='<div class="recent-actions">';
     html+='<button style="padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;min-height:44px;background:rgba(34,197,94,0.15);color:var(--green)" onclick="restoreRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')">Restore</button>';
-    html+='<button class="btn-del" onclick="deleteRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')">&#128465;</button>';
+    if(canDelete(document.getElementById('techName')?document.getElementById('techName').value.trim():'')){html+='<button class="btn-del" onclick="deleteRound(\''+escHtml(r._fbKey||'').replace(/\x27/g,"\\'")+'\')">&#128465;</button>';}
     html+='</div></div>';
   }
   listEl.innerHTML=html;
@@ -1288,7 +1416,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
 document.addEventListener('visibilitychange',function(){if(document.hidden)autoSaveRound();});
 window.addEventListener('beforeunload',function(){autoSaveRound();});
 /* ===== INIT ===== */
-function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
+function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadRoles();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
 function loadBuildingConfig(){
   if(!db)return;syncOfflineQueue();updateOfflineBadge();
   db.ref('config/buildings').once('value',function(snap){

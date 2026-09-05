@@ -428,6 +428,7 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <input class="start-input" type="date" id="roundDate">
 <button class="btn-begin" id="btnBegin" onclick="beginRounds()">BEGIN ROUNDS</button>
 <button class="btn-begin" style="background:var(--card);color:var(--accent);border:1px solid var(--accent);margin-top:8px" onclick="openComplianceDirect()">&#128202; Campus Compliance Dashboard</button>
+<button id="btnManageAdmins" style="display:none;width:100%;padding:16px;background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid var(--amber);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;min-height:56px" onclick="showAdminPanel()">&#9881;&#65039; Manage Admins</button>
 <div class="recent-section">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
 <div class="start-label" style="margin:0">Recent Rounds</div>
@@ -526,6 +527,12 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 </div>
 
 <!-- SCREEN 4: DONE -->
+<div class="screen" id="adminScreen">
+<div class="content" id="adminContent">
+<div style="padding:40px;text-align:center;color:var(--muted)">Loading admin panel...</div>
+</div>
+</div>
+
 <div class="screen" id="doneScreen">
 <div class="done-content">
 <div class="done-icon">&#9989;</div>
