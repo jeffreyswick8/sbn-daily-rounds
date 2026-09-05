@@ -280,7 +280,7 @@ function initStartScreen(){
   sg.innerHTML='<button class="shift-btn" data-shift="Days">Days</button><button class="shift-btn" data-shift="Nights">Nights</button>';
   var sb=sg.querySelectorAll('.shift-btn');
   for(var m=0;m<sb.length;m++)sb[m].addEventListener('click',function(){var all=sg.querySelectorAll('.shift-btn');for(var n=0;n<all.length;n++)all[n].classList.remove('selected');this.classList.add('selected');checkReady();});
-  document.getElementById('techName').addEventListener('input',function(){checkReady();updateCurrentUserRole();});
+  document.getElementById('techName').addEventListener('input',function(){this.value=this.value.toLowerCase();checkReady();updateCurrentUserRole();});
   document.getElementById('roundDate').value=todayStr();
 }
 function getSelectedBuilding(){var s=document.querySelector('.building-btn.selected');return s?s.getAttribute('data-bldg'):'';}
@@ -710,7 +710,7 @@ function markRemainingOk(){
   for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)secData.items[i].status=okStatus;}
   checkSectionComplete(currentSection);
   if(currentSection<activeSections.length-1)currentSection++;
-  renderWalkthrough();renderZoneList();updateDashboardMetrics();
+  renderWalkthrough();renderZoneList();updateDashboardMetrics();var wc=document.getElementById('walkContent');if(wc)wc.scrollTop=0;autoSaveRound();
 }
 function checkSectionComplete(sIdx){
   var secData=roundData.sections[sIdx];var allDone=true,allOk=true;
