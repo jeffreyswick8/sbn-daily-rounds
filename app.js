@@ -69,6 +69,65 @@ var mvnrNotes={
 
 /* ===== FIREBASE ===== */
 function initFirebase(){try{var app=firebase.initializeApp({apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6',storageBucket:'budget-tracket-200b6.firebasestorage.app',messagingSenderId:'442984201568',appId:'1:442984201568:web:8203ec4ffbf1a05b283205'},'rounds');db=firebase.app('rounds').database();}catch(e){try{db=firebase.app('rounds').database();}catch(e2){}}}
+/* ===== WHITELIST & LOGIN GATE ===== */
+var defaultWhitelist=['adammelh','adiazv','agisaleh','ajdrans','areddyr','ayousey','baughjbr','belgpa','beloukar','bjerfran','bmateyu','braelee','brenrenz','bsknr','cdover','cdrob','cemaes','chenvsn','clabthom','cliffbrd','crjrich','csuryaar','daeonte','danietme','daqalfr','darylise','dblarson','debretys','dhruvdp','dvdken','eagenhay','ekaletha','fabricas','ferdaube','fmichend','froggi','gidaltoj','gmajjari','gpoulin','gritod','jacorope','jasboles','jcriosa','jdleal','joenofal','joshmx','juspnce','kaemerer','kchargus','kdancler','kevlitke','khaaaan','korryank','ksabo','leaanne','lymosams','macest','mhtesfai','mjeedans','mmohun','mzskile','nallyk','naphfox','natubb','navangsp','navyaadd','nfobert','niemarob','owenkat','purnacrd','raechc','ramecody','reddyvsu','remusjef','rmatacb','rmerci','ronaulj','sanrodrv','seschne','skilesnx','skpailla','srmcgee','swicjeff','tjamora','tmuscato','vishachz','wcpull','zspoljor'];
+var authorizedUsers=defaultWhitelist.slice();
+var loggedInAlias='';
+
+function loadWhitelist(){
+  if(db){
+    db.ref('config/whitelist').once('value',function(snap){
+      var val=snap.val();
+      if(val&&Array.isArray(val)&&val.length>0){authorizedUsers=val;}
+      else{db.ref('config/whitelist').set(defaultWhitelist);authorizedUsers=defaultWhitelist.slice();}
+    });
+  }
+}
+
+function isAuthorized(alias){
+  if(!alias)return false;
+  var a=alias.toLowerCase();
+  for(var i=0;i<authorizedUsers.length;i++){if(authorizedUsers[i].toLowerCase()===a)return true;}
+  return false;
+}
+
+function attemptLogin(){
+  var input=document.getElementById('loginAlias');
+  var errDiv=document.getElementById('loginError');
+  if(!input||!input.value.trim()){errDiv.textContent='Please enter your alias';errDiv.style.display='block';return;}
+  var alias=input.value.trim().toLowerCase();
+  input.value=alias;
+  if(!isAuthorized(alias)){errDiv.textContent='Access denied. Contact your FM for access.';errDiv.style.display='block';return;}
+  errDiv.style.display='none';
+  loggedInAlias=alias;
+  sessionStorage.setItem('sbn-rounds-alias',alias);
+  // Set the hidden techName field for backward compat
+  var techField=document.getElementById('techName');
+  if(techField)techField.value=alias;
+  showScreen('startScreen');
+  updateCurrentUserRole();
+  loadRecentRounds();
+}
+
+function checkSession(){
+  var saved=sessionStorage.getItem('sbn-rounds-alias');
+  if(saved&&isAuthorized(saved)){
+    loggedInAlias=saved;
+    var techField=document.getElementById('techName');
+    if(techField)techField.value=saved;
+    showScreen('startScreen');
+    updateCurrentUserRole();
+    return true;
+  }
+  return false;
+}
+
+function logout(){
+  sessionStorage.removeItem('sbn-rounds-alias');
+  loggedInAlias='';
+  showScreen('loginScreen');
+}
+
 /* ===== ROLE-BASED ACCESS CONTROL ===== */
 var defaultRoles={
   superAdmins:['seschne'],
@@ -282,10 +341,14 @@ function initStartScreen(){
   for(var m=0;m<sb.length;m++)sb[m].addEventListener('click',function(){var all=sg.querySelectorAll('.shift-btn');for(var n=0;n<all.length;n++)all[n].classList.remove('selected');this.classList.add('selected');checkReady();});
   document.getElementById('techName').addEventListener('input',function(){this.value=this.value.toLowerCase();checkReady();updateCurrentUserRole();});
   document.getElementById('roundDate').value=todayStr();
+// Login Enter key
+var loginInput=document.getElementById('loginAlias');
+if(loginInput){loginInput.addEventListener('keydown',function(e){if(e.key==='Enter')attemptLogin();});loginInput.addEventListener('input',function(){this.value=this.value.toLowerCase();document.getElementById('loginError').style.display='none';});}
+
 }
 function getSelectedBuilding(){var s=document.querySelector('.building-btn.selected');return s?s.getAttribute('data-bldg'):'';}
 function getSelectedShift(){var s=document.querySelector('.shift-btn.selected');return s?s.getAttribute('data-shift'):'';}
-function checkReady(){var ok=getSelectedBuilding()&&document.getElementById('techName').value.trim()&&getSelectedShift();var btn=document.getElementById('btnBegin');btn.style.opacity=ok?'1':'0.5';}
+function checkReady(){var ok=getSelectedBuilding()&&getSelectedShift();var btn=document.getElementById('btnBegin');btn.style.opacity=ok?'1':'0.5';}
 
 function beginRounds(){
   try{
@@ -1416,7 +1479,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
 document.addEventListener('visibilitychange',function(){if(document.hidden)autoSaveRound();});
 window.addEventListener('beforeunload',function(){autoSaveRound();});
 /* ===== INIT ===== */
-function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadRoles();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
+function waitForFirebase(){try{if(typeof firebase!=='undefined'&&firebase.initializeApp){initFirebase();loadWhitelist();loadRoles();loadBuildingConfig();loadRecentRounds();}else{setTimeout(waitForFirebase,100);}}catch(e){}}
 function loadBuildingConfig(){
   if(!db)return;syncOfflineQueue();updateOfflineBadge();
   db.ref('config/buildings').once('value',function(snap){
@@ -1438,4 +1501,4 @@ function loadBuildingConfig(){
     else{db.ref('config/buildings').set(buildingList);}
   });
 }
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();});}else{loadTheme();initStartScreen();waitForFirebase();}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();setTimeout(function(){if(!checkSession()){showScreen('loginScreen');}},500);});}else{loadTheme();initStartScreen();waitForFirebase();setTimeout(function(){if(!checkSession()){showScreen('loginScreen');}},500);}
