@@ -294,7 +294,7 @@ function updateOfflineBadge(){
 /* ===== HELPERS ===== */
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},3000);}
-function showScreen(id){var screens=document.querySelectorAll('.screen');for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');document.getElementById(id).classList.add('active');var hdr=document.querySelector('.header');if(hdr)hdr.style.display=id==='loginScreen'?'none':'';}
+function showScreen(id){var screens=document.querySelectorAll('.screen');for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');document.getElementById(id).classList.add('active');}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function timeAgo(ts){if(!ts)return'Never';var diff=Date.now()-ts;var hrs=Math.floor(diff/3600000);if(hrs<1)return Math.floor(diff/60000)+'m ago';if(hrs<24)return hrs+'h ago';return Math.floor(hrs/24)+'d ago';}
 function formatDateTime(ts){if(!ts)return'N/A';var d=new Date(ts);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
@@ -1501,4 +1501,4 @@ function loadBuildingConfig(){
     else{db.ref('config/buildings').set(buildingList);}
   });
 }
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();setTimeout(function(){if(!checkSession()){showScreen('loginScreen');}},500);});}else{loadTheme();initStartScreen();waitForFirebase();setTimeout(function(){if(!checkSession()){showScreen('loginScreen');}},500);}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();if(!checkSession()){showScreen('loginScreen');}});}else{loadTheme();initStartScreen();waitForFirebase();if(!checkSession()){showScreen('loginScreen');}}
