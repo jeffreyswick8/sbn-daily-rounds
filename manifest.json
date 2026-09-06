@@ -1,7 +1,8 @@
 {
   "name": "SBN Daily Rounds",
   "short_name": "Rounds",
-  "start_url": "/sbn-daily-rounds/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#232f3e",
   "theme_color": "#ff9900",
