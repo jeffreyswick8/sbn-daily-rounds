@@ -1,11 +1,11 @@
-var CACHE_NAME = 'sbn-rounds-v5';
+var CACHE_NAME = 'sbn-rounds-v6';
 var urlsToCache = [
-  '/SBN-Daily-Rounds/',
-  '/SBN-Daily-Rounds/index.html',
-  '/SBN-Daily-Rounds/manifest.json',
-  '/SBN-Daily-Rounds/icon-192.png',
-  '/SBN-Daily-Rounds/icon-512.png',
-  '/SBN-Daily-Rounds/app.js'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/app.js'
 ];
 
 self.addEventListener('install', function(event) {
@@ -45,7 +45,7 @@ self.addEventListener('fetch', function(event) {
       return networkResponse;
     }).catch(function() {
       return caches.match(event.request).then(function(cached) {
-        return cached || caches.match('/SBN-Daily-Rounds/index.html');
+        return cached || caches.match('/index.html');
       });
     })
   );
