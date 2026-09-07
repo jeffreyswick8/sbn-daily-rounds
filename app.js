@@ -69,6 +69,26 @@ var mvnrNotes={
 
 /* ===== FIREBASE ===== */
 function initFirebase(){try{var app=firebase.initializeApp({apiKey:'AIzaSyBSbPq4wucgAha9yyccI0rVF8y6Zzw97Mw',authDomain:'budget-tracket-200b6.firebaseapp.com',databaseURL:'https://budget-tracket-200b6-default-rtdb.firebaseio.com',projectId:'budget-tracket-200b6',storageBucket:'budget-tracket-200b6.firebasestorage.app',messagingSenderId:'442984201568',appId:'1:442984201568:web:8203ec4ffbf1a05b283205'},'rounds');db=firebase.app('rounds').database();}catch(e){try{db=firebase.app('rounds').database();}catch(e2){}}}
+/* ===== LOADING SPINNER ===== */
+function showLoading(msg){
+  var el=document.getElementById('loadingOverlay');
+  if(!el){el=document.createElement('div');el.id='loadingOverlay';el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200';document.body.appendChild(el);}
+  el.innerHTML='<div style="background:var(--surface);border-radius:14px;padding:24px 32px;text-align:center"><div style="font-size:24px;margin-bottom:8px">&#9203;</div><div style="color:var(--text);font-size:14px">'+(msg||'Loading...')+'</div></div>';
+  el.style.display='flex';
+}
+function hideLoading(){var el=document.getElementById('loadingOverlay');if(el)el.style.display='none';}
+
+// Auto-logout after 24 hours
+function checkSessionExpiry(){
+  var loginTime=sessionStorage.getItem('sbn-rounds-login-time');
+  if(loginTime&&(Date.now()-parseInt(loginTime))>86400000){
+    sessionStorage.removeItem('sbn-rounds-alias');
+    sessionStorage.removeItem('sbn-rounds-login-time');
+    showScreen('loginScreen');showToast('Session expired. Please log in again.');
+    return true;
+  }
+  return false;
+}
 /* ===== WHITELIST & LOGIN GATE ===== */
 var defaultWhitelist=['adammelh','adiazv','agisaleh','ajdrans','areddyr','ayousey','baughjbr','belgpa','beloukar','bjerfran','bmateyu','braelee','brenrenz','bsknr','cdover','cdrob','cemaes','chenvsn','clabthom','cliffbrd','crjrich','csuryaar','daeonte','danietme','daqalfr','darylise','dblarson','debretys','dhruvdp','dvdken','eagenhay','ekaletha','fabricas','ferdaube','fmichend','froggi','gidaltoj','gmajjari','gpoulin','gritod','jacorope','jasboles','jcriosa','jdleal','joenofal','joshmx','juspnce','kaemerer','kchargus','kdancler','kevlitke','khaaaan','korryank','ksabo','leaanne','lymosams','macest','mhtesfai','mjeedans','mmohun','mzskile','nallyk','naphfox','natubb','navangsp','navyaadd','nfobert','niemarob','owenkat','purnacrd','raechc','ramecody','reddyvsu','remusjef','rmatacb','rmerci','ronaulj','sanrodrv','seschne','skilesnx','skpailla','srmcgee','swicjeff','tjamora','tmuscato','vishachz','wcpull','zspoljor'];
 var authorizedUsers=defaultWhitelist.slice();
@@ -100,7 +120,7 @@ function attemptLogin(){
   if(!isAuthorized(alias)){errDiv.textContent='Access denied. Contact your FM for access.';errDiv.style.display='block';return;}
   errDiv.style.display='none';
   loggedInAlias=alias;
-  sessionStorage.setItem('sbn-rounds-alias',alias);
+  sessionStorage.setItem('sbn-rounds-alias',alias);sessionStorage.setItem('sbn-rounds-login-time',String(Date.now()));
   // Set the hidden techName field for backward compat
   var techField=document.getElementById('techName');
   if(techField)techField.value=alias;
@@ -109,7 +129,7 @@ function attemptLogin(){
   loadRecentRounds();
 }
 
-function checkSession(){
+function checkSession(){if(checkSessionExpiry())return false;
   var saved=sessionStorage.getItem('sbn-rounds-alias');
   if(saved&&isAuthorized(saved)){
     loggedInAlias=saved;
@@ -122,7 +142,7 @@ function checkSession(){
   return false;
 }
 
-function logout(){
+function logout(){if(!confirm('Log out of SBN Daily Rounds?'))return;
   sessionStorage.removeItem('sbn-rounds-alias');
   loggedInAlias='';
   showScreen('loginScreen');
@@ -359,7 +379,7 @@ function beginRounds(){
   if(!document.getElementById('techName').value.trim()){btn.textContent='\u26A0 ENTER YOUR ALIAS';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
   if(!getSelectedShift()){btn.textContent='\u26A0 SELECT A SHIFT';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
   currentSection=0;photoStore={};noteEditState={};
-  btn.textContent='LOADING...';btn.style.background='var(--amber)';btn.style.color='#000';
+  btn.textContent='LOADING...';btn.style.background='var(--amber)';btn.style.color='#000';showLoading('Loading sections...');
   var loaded=false;
   if(db){
     var timeout=setTimeout(function(){if(!loaded){loaded=true;activeSections=defaultSections;btn.textContent='BEGIN ROUNDS';btn.style.background='';btn.style.color='';startRoundsWithSections(selectedBldg);}},4000);
@@ -390,7 +410,7 @@ function startRoundsWithSections(selectedBldg){
   roundData={building:selectedBldg,technician:document.getElementById('techName').value.trim(),shift:getSelectedShift(),date:document.getElementById('roundDate').value||todayStr(),ticketUrl:document.getElementById('ticketUrl').value.trim(),startTime:Date.now(),endTime:null,status:'in_progress',sections:secs,lastModified:Date.now()};
   activeBuilding=roundData.building;
   document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;if(isMVNR(activeBuilding)){document.getElementById('headerSub').textContent+=' [MVNR]';}
-  showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
+  hideLoading();showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
   switchMainTab('zones');
   }catch(e){alert('startRounds error: '+e.message);showScreen('startScreen');}
 }
@@ -722,17 +742,9 @@ function attachSwipe(card,sIdx,iIdx,type){
 }
 
 function markItem(sIdx,iIdx,status){roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();}
-function markAllOk(){
-  var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
-  var okStatus=sec.type==='exp_unexp'?'expected':'ok';
-  for(var i=0;i<secData.items.length;i++){secData.items[i].status=okStatus;secData.items[i].noteLocked=false;}
-  secData.allOk=true;secData.status='complete';secData.completedBy=roundData.technician;secData.completedAt=Date.now();
-  if(currentSection<activeSections.length-1)currentSection++;
-  renderWalkthrough();renderZoneList();updateDashboardMetrics();var wc=document.getElementById('walkContent');if(wc)wc.scrollTop=0;autoSaveRound();
-}
+
 function updateItemNote(sIdx,iIdx,val){roundData.sections[sIdx].items[iIdx].note=val;updateNavButtons();}
 
-function updateSectionNotes(sIdx,val){/* legacy - kept for compat */}
 function renderMultiNotes(sIdx,secName){
   var secData=roundData.sections[sIdx];
   // Migrate legacy string notes to array
@@ -942,7 +954,7 @@ function shareFile(){
   var btn=document.getElementById('btnShareFile');
   if(!roundData||!lastReportKey){if(btn)btn.textContent='No report available';return;}
   if(btn){btn.textContent='Sharing...';btn.style.opacity='0.7';}
-  var reportUrl='https://jeffreyswick8.github.io/sbn-daily-rounds/report.html?key='+encodeURIComponent(lastReportKey)+'&name='+encodeURIComponent(lastReportName);
+  var reportUrl='https://sbnrounds.com/report.html?key='+encodeURIComponent(lastReportKey)+'&name='+encodeURIComponent(lastReportName);
   var shareText=lastSubmitSummary?lastSubmitSummary:'';
   shareText+='\n\nDownload Report:\n'+reportUrl;
   if(navigator.share){
@@ -1064,7 +1076,9 @@ function generateExcel(){
       h+='<td class="'+(item.note?'note-cell':'')+'">'+(item.note||'')+'</td>';
       h+='<td>'+(item.photos>0?item.photos+' photo(s)':'')+'</td></tr>';
     });
-    if(sec.notes)h+='<tr><td colspan="4" class="note-cell">Notes: '+sec.notes+'</td></tr>';
+    if(sec.notesList&&sec.notesList.length>0){
+      sec.notesList.forEach(function(n){h+='<tr><td colspan="4" class="note-cell">Note: '+n+'</td></tr>';});
+    }else if(sec.notes){h+='<tr><td colspan="4" class="note-cell">Notes: '+sec.notes+'</td></tr>';}
   });
   var totalItems=0,okCount=0,issueCount=0;
   roundData.sections.forEach(function(sec){sec.items.forEach(function(item){if(!item)return;totalItems++;if(item.status==='ok'||item.status==='expected')okCount++;if(item.status==='issue'||item.status==='unexpected')issueCount++;});});
@@ -1161,10 +1175,10 @@ function editRound(fbKey){
         roundData.sections.push({name:sec.name,status:'pending',allOk:false,completedBy:'',completedAt:'',notes:'',items:items});
       }
       document.getElementById('headerSub').textContent=activeBuilding+' — '+(roundData.shift||'')+' — '+(roundData.technician||'');
-      showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();switchMainTab('walk');
+      hideLoading();showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();switchMainTab('walk');
     },function(){activeSections=defaultSections;
       document.getElementById('headerSub').textContent=activeBuilding+' — '+(roundData.shift||'')+' — '+(roundData.technician||'');
-      showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();switchMainTab('walk');
+      hideLoading();showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();switchMainTab('walk');
     });
     }catch(e){showToast('Error opening round: '+e.message);}
   });
@@ -1248,6 +1262,10 @@ function restoreRound(fbKey){
 }
 /* ===== COMPLIANCE DASHBOARD ===== */
 function renderCompliance(){
+  // Auto-refresh every 5 minutes
+  if(window._complianceTimer)clearInterval(window._complianceTimer);
+  window._complianceTimer=setInterval(function(){if(document.querySelector('#tabCompliance.active'))renderCompliance();},300000);
+
   if(!db){
     document.getElementById('complianceSummary').innerHTML='<div class="compliance-stat" style="grid-column:1/4"><div class="compliance-stat-val">&#8987;</div><div class="compliance-stat-lbl">Connecting to Firebase...</div></div>';
     document.getElementById('complianceGrid').innerHTML='';
