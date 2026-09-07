@@ -673,7 +673,9 @@ html+='<div class="item-list">';
       html+='<div class="item-card '+lineupCls+'" id="card-'+idx+'">';
       html+='<div class="swipe-bg swipe-bg-ok">&#10003; '+okLabel+'</div>';
       html+='<div class="swipe-bg swipe-bg-issue">'+issueLabel+' &#10007;</div>';
+      var existingFinding=getOpenFinding(sec.name,sCols[idx]);
       html+='<div class="item-content"><div class="item-name"><span>'+escHtml(sCols[idx])+'</span>';
+      if(existingFinding&&!viewOnlyMode){html+='<span style="background:rgba(245,158,11,0.15);color:var(--amber);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">\u26A0 Open Finding</span>';}
       if(statusText)html+='<span class="status-badge '+statusCls+'">'+statusText+'</span>';
       html+='</div></div>';
       if(item.status==='issue'||item.status==='unexpected'){
@@ -723,6 +725,33 @@ function unlockNote(sIdx,iIdx){roundData.sections[sIdx].items[iIdx].noteLocked=f
 /* ===== JUMP TO SECTION ===== */
 function jumpToSection(idx){currentSection=idx;renderWalkthrough();document.getElementById('walkContent').scrollTop=0;}
 
+/* ===== FINDINGS AWARENESS ===== */
+function getOpenFinding(sectionName, itemName){
+  if(!allFindings||allFindings.length===0)return null;
+  for(var i=0;i<allFindings.length;i++){
+    var f=allFindings[i];
+    if(f.status==='open'&&f.zone===sectionName&&f.item===itemName)return f;
+  }
+  return null;
+}
+function confirmFinding(findingKey){
+  if(!db||!findingKey)return;
+  var alias=loggedInAlias||roundData.technician||'';
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/confirmations').push({alias:alias,timestamp:Date.now()});
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/lastConfirmed').set(Date.now());
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/lastConfirmedBy').set(alias);
+  showToast('Finding confirmed as still present');
+}
+function resolveFromWalk(findingKey){
+  if(!db||!findingKey)return;
+  var alias=loggedInAlias||roundData.technician||'';
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/status').set('resolved');
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/resolvedBy').set(alias);
+  db.ref('findings/'+activeBuilding+'/'+findingKey+'/resolvedAt').set(Date.now());
+  // Refresh findings
+  loadFindingsFromFirebase();
+  showToast('Finding resolved');
+}
 /* ===== SWIPE ===== */
 function attachSwipe(card,sIdx,iIdx,type){
   if(!card)return;if(viewOnlyMode)return;var startX=0,startY=0,swiping=false,scrolling=false;
@@ -749,7 +778,20 @@ function attachSwipe(card,sIdx,iIdx,type){
   card.addEventListener('click',function(e){if(swiping)return;if(e.target.closest('.issue-detail')||e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;var item=roundData.sections[sIdx].items[iIdx];var okSt=type==='exp_unexp'?'expected':'ok';var issueSt=type==='exp_unexp'?'unexpected':'issue';if(!item.status){item.status=okSt;}else if(item.status===okSt){item.status=issueSt;}else{item.status='';item.note='';item.noteLocked=false;}checkSectionComplete(sIdx);renderWalkthrough();});
 }
 
-function markItem(sIdx,iIdx,status){roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();}
+function markItem(sIdx,iIdx,status){
+  var sec=activeSections[sIdx];
+  var itemName=sec.cols?sec.cols[iIdx]:'';
+  var existing=getOpenFinding(sec.name,itemName);
+  if(existing&&(status==='issue'||status==='unexpected')){
+    // Item already has an open finding — confirm it instead of creating duplicate
+    var choice=confirm('This item already has an open finding from '+escHtml(existing.technician||'unknown')+' ('+escHtml(existing.date||'')+').\n\nTap OK to confirm it\'s still an issue, or Cancel to report a NEW issue.');
+    if(choice){confirmFinding(existing._key);roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();return;}
+  }
+  if(existing&&(status==='ok'||status==='expected')){
+    // Item has an open finding but tech says OK — offer to resolve
+    if(confirm('This item has an open finding. Resolve it?')){resolveFromWalk(existing._key);}
+  }
+  roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();}
 
 function updateItemNote(sIdx,iIdx,val){roundData.sections[sIdx].items[iIdx].note=val;updateNavButtons();}
 
