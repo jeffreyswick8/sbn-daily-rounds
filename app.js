@@ -1030,7 +1030,7 @@ function submitRounds(){
 }
 function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 function handleSubmitFile(blob,filename,mimeType){
-  var fbKey='rounds/'+roundData.building+'/'+roundData.date+'/'+Date.now();
+  var fbKey='rounds/'+roundData.building+'/'+roundData.date+'/'+roundData.startTime;
   if(isEditing&&editKey)fbKey=editKey;
   // Log the save action in edit trail
   if(isEditing&&roundData.editLog){roundData.editLog.push({alias:roundData.lastEditedBy||roundData.technician,timestamp:Date.now(),action:'saved changes'});}
