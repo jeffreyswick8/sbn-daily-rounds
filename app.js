@@ -1044,7 +1044,8 @@ function submitRounds(){
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
   var hasPhotos=false;var photoTotal=0;var keys=Object.keys(photoStore);for(var i=0;i<keys.length;i++){if(photoStore[keys[i]].length>0){hasPhotos=true;photoTotal+=photoStore[keys[i]].length;}}
-  showToast('Submit: '+photoTotal+' photos, JSZip='+(typeof JSZip!=='undefined'?'loaded':'MISSING'));
+
+  
   if(hasPhotos&&typeof JSZip!=='undefined'){
     var zip=new JSZip();zip.file(baseName+'.xls',excelHtml);
     var folder=zip.folder('photos');
@@ -1054,7 +1055,7 @@ function submitRounds(){
       var itemName=(secObj&&secObj.cols[parseInt(parts[1])])?secObj.cols[parseInt(parts[1])].replace(/[^a-zA-Z0-9]/g,'_').substring(0,15):'item';
       var b64=dataUrl.split(',')[1];folder.file(secName+'_'+itemName+'_'+(pi+1)+'.jpg',b64,{base64:true});
     });});
-    zip.generateAsync({type:'blob'}).then(function(blob){showToast('ZIP created: '+Math.round(blob.size/1024)+'KB');handleSubmitFile(blob,baseName+'.zip','application/zip');});
+    zip.generateAsync({type:'blob'}).then(function(blob){handleSubmitFile(blob,baseName+'.zip','application/zip');});
   }else{var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});handleSubmitFile(blob,baseName+'.xls','application/vnd.ms-excel');}
   }catch(err){alert('Submit error: '+err.message);}
 }
@@ -1081,6 +1082,7 @@ function handleSubmitFile(blob,filename,mimeType){
   showScreen('doneScreen');exitCompactWalk();
   var shareBtn=document.getElementById('btnShareFile');var dlBtn=document.getElementById('btnDownloadFile');var msg=document.getElementById('doneMsg');
   if(canShareFiles){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Round Report';dlBtn.style.display='block';downloadBlob(blob,filename);var simBtn2=document.getElementById('btnOpenSim');if(simBtn2)simBtn2.style.display=roundData.ticketUrl?'block':'none';var photoCount=0;var pkeys=Object.keys(photoStore);for(var pi=0;pi<pkeys.length;pi++)photoCount+=photoStore[pkeys[pi]].length;
+
 msg.innerHTML='Your round data has been saved!'+(photoCount>0?'<br><strong>'+photoCount+' photo(s) included in download.</strong>':'')+'<br>Tap Share to send the report.';showToast('Rounds submitted!');}
   else if(canShareText){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Summary';dlBtn.style.display='block';downloadBlob(blob,filename);var simBtn=document.getElementById('btnOpenSim');if(simBtn)simBtn.style.display=roundData.ticketUrl?'block':'none';
     msg.innerHTML='Your round data has been saved!<br>File downloaded'+(photoCount>0?' ('+photoCount+' photos included)':'')+''+(photoCount>0?' ('+photoCount+' photos included)':'')+'. Tap Share to send a summary.';showToast('File downloaded!');}
