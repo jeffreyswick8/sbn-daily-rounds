@@ -92,6 +92,7 @@ function checkSessionExpiry(){
 /* ===== WHITELIST & LOGIN GATE ===== */
 var defaultWhitelist=['adammelh','adiazv','agisaleh','ajdrans','areddyr','ayousey','baughjbr','belgpa','beloukar','bjerfran','bmateyu','braelee','brenrenz','bsknr','cdover','cdrob','cemaes','chenvsn','clabthom','cliffbrd','crjrich','csuryaar','daeonte','danietme','daqalfr','darylise','dblarson','debretys','dhruvdp','dvdken','eagenhay','ekaletha','fabricas','ferdaube','fmichend','froggi','gidaltoj','gmajjari','gpoulin','gritod','jacorope','jasboles','jcriosa','jdleal','joenofal','joshmx','juspnce','kaemerer','kchargus','kdancler','kevlitke','khaaaan','korryank','ksabo','leaanne','lymosams','macest','mhtesfai','mjeedans','mmohun','mzskile','nallyk','naphfox','natubb','navangsp','navyaadd','nfobert','niemarob','owenkat','purnacrd','raechc','ramecody','reddyvsu','remusjef','rmatacb','rmerci','ronaulj','sanrodrv','seschne','skilesnx','skpailla','srmcgee','swicjeff','tjamora','tmuscato','vishachz','wcpull','zspoljor'];
 var authorizedUsers=defaultWhitelist.slice();
+var viewOnlyMode=false;
 var loggedInAlias='';
 
 function loadWhitelist(){
@@ -125,6 +126,7 @@ function attemptLogin(){
   var techField=document.getElementById('techName');
   if(techField)techField.value=alias;
   showScreen('startScreen');
+  handleShortcut();
   updateCurrentUserRole();
   loadRecentRounds();
 }
@@ -608,6 +610,12 @@ function renderHistory(){
 /* ===== WALKTHROUGH ===== */
 function renderWalkthrough(){
   if(!roundData)return;
+  // View-only banner
+  var voBanner=document.getElementById('viewOnlyBanner');
+  if(!voBanner){voBanner=document.createElement('div');voBanner.id='viewOnlyBanner';voBanner.style.cssText='display:none;background:rgba(6,182,212,0.15);border:1px solid var(--accent);border-radius:var(--radius);padding:10px 16px;margin:0 16px 8px;text-align:center;font-size:13px;font-weight:600;color:var(--accent)';
+    var walkHeader=document.querySelector('.walk-header-full');if(walkHeader)walkHeader.parentNode.insertBefore(voBanner,walkHeader);}
+  voBanner.style.display=viewOnlyMode?'block':'none';
+  voBanner.textContent=viewOnlyMode?'\uD83D\uDD12 View Only \u2014 '+roundData.technician+"'s walk":'';
   var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
   document.getElementById('walkTitle').textContent=sec.name;
   document.getElementById('walkDesc').textContent=sec.cheatSheet?'':sec.desc;
@@ -697,7 +705,7 @@ html+='<div class="item-list">';
     html+='</div>';
     // Remaining OK/Expected button at bottom (KC suggestion)
     var remaining=0;var sItems=secData.items||[];for(var ri=0;ri<sItems.length;ri++){if(!sItems[ri].status)remaining++;}
-    if(remaining>0)html+='<button class="btn-remaining" onclick="markRemainingOk()">REMAINING '+okLabel.toUpperCase()+' ('+remaining+') &#9989;</button>';
+    if(remaining>0&&!viewOnlyMode)html+='<button class="btn-remaining" onclick="markRemainingOk()">REMAINING '+okLabel.toUpperCase()+' ('+remaining+') &#9989;</button>';
     // Multi-note section notes
     html+=renderMultiNotes(currentSection,sec.name);
   }
@@ -717,7 +725,7 @@ function jumpToSection(idx){currentSection=idx;renderWalkthrough();document.getE
 
 /* ===== SWIPE ===== */
 function attachSwipe(card,sIdx,iIdx,type){
-  if(!card)return;var startX=0,startY=0,swiping=false,scrolling=false;
+  if(!card)return;if(viewOnlyMode)return;var startX=0,startY=0,swiping=false,scrolling=false;
   var content=card.querySelector('.item-content');
   card.addEventListener('touchstart',function(e){var t=e.touches[0];startX=t.clientX;startY=t.clientY;swiping=false;scrolling=false;content.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',function(e){
@@ -753,7 +761,7 @@ function renderMultiNotes(sIdx,secName){
   var html='<div class="section-notes"><label>Section Notes</label>';
   html+='<div class="note-entry-area">';
   html+='<textarea id="noteInput-'+sIdx+'" inputmode="text" placeholder="Add a note..."></textarea>';
-  html+='<button class="note-submit-btn" onclick="submitSectionNote('+sIdx+')">Submit</button>';
+  if(!viewOnlyMode)html+='<button class="note-submit-btn" onclick="submitSectionNote('+sIdx+')">Submit</button>';else html+='<div style="font-size:12px;color:var(--muted);padding:8px">View only \u2014 notes cannot be added</div>';
   html+='</div>';
   if(secData.notesList.length>0){
     html+='<div class="saved-notes-list">';
@@ -798,6 +806,11 @@ function checkSectionComplete(sIdx){
 
 }
 function updateNavButtons(){
+  if(viewOnlyMode){
+    var btn=document.getElementById('btnNext');if(btn){btn.disabled=false;btn.textContent=currentSection===activeSections.length-1?'Done Viewing':'Next \u2192';}
+    var prev=document.getElementById('btnPrev');if(prev)prev.disabled=currentSection===0;
+    return;
+  }
   var secData=roundData.sections[currentSection];
   document.getElementById('btnPrev').disabled=currentSection===0;
   var allMarked=true,allNotesOk=true;
@@ -829,6 +842,11 @@ function updateMiniHeader(){
 }
 function prevSection(){if(currentSection>0){currentSection--;renderWalkthrough();}}
 function nextSection(){
+  if(viewOnlyMode){
+    if(currentSection<activeSections.length-1){currentSection++;renderWalkthrough();var wc=document.getElementById('walkContent');if(wc)wc.scrollTop=0;}
+    else{showToast('End of walk');resetApp();}
+    return;
+  }
   if(currentSection<activeSections.length-1){checkSectionComplete(currentSection);currentSection++;renderWalkthrough();document.getElementById('walkContent').scrollTop=0;}
   else{checkSectionComplete(currentSection);showSummary();}
 }
@@ -1438,7 +1456,7 @@ function resetApp(){
   var backBtn=document.getElementById('btnBackToStart');
   if(backBtn)backBtn.remove();
   document.getElementById('dashHeader').style.display='';
-exitCompactWalk();roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;lastSubmitBlob=null;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
+exitCompactWalk();viewOnlyMode=false;roundData=null;photoStore={};currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};handoffData=null;handoffEditing=false;lastSubmitBlob=null;document.getElementById('headerSub').textContent='Select building to begin';document.getElementById('clipboardHint').style.display='none';document.getElementById('simBanner').style.display='none';showScreen('startScreen');loadRecentRounds();}
 
 /* ===== DARK/LIGHT MODE ===== */
 function toggleMode(){var btn=document.getElementById('modeBtn');if(document.body.classList.contains('light-mode')){document.body.classList.remove('light-mode');btn.innerHTML='&#9728;&#65039; Light';try{localStorage.setItem('sbn-rounds-theme','dark');}catch(e){}}else{document.body.classList.add('light-mode');btn.innerHTML='&#127769; Dark';try{localStorage.setItem('sbn-rounds-theme','light');}catch(e){}}}
@@ -1521,5 +1539,13 @@ function loadBuildingConfig(){
     }
     else{db.ref('config/buildings').set(buildingList);}
   });
+}
+
+// Handle manifest shortcuts (long-press quick actions)
+function handleShortcut(){
+  var params=new URLSearchParams(window.location.search);
+  var action=params.get('action');
+  if(action==='compliance'){setTimeout(function(){openComplianceDirect();},500);}
+  // 'start' action just goes to the normal start screen (default behavior)
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){loadTheme();initStartScreen();waitForFirebase();if(!checkSession()){showScreen('loginScreen');}});}else{loadTheme();initStartScreen();waitForFirebase();if(!checkSession()){showScreen('loginScreen');}}
