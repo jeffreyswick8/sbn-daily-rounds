@@ -1585,6 +1585,14 @@ function openComplianceDirect(){
   }
 }
 
+function goHome(){
+  exitCompactWalk();viewOnlyMode=false;roundData=null;photoStore={};clearPhotoStorage();
+  currentSection=0;isEditing=false;editKey=null;zoneStatusCache={};allFindings=[];allHistory=[];activeBuilding='';noteEditState={};
+  handoffData=null;handoffEditing=false;lastSubmitBlob=null;
+  document.getElementById('headerSub').textContent='Select building to begin';
+  showScreen('startScreen');
+  loadRecentRounds();
+}
 function resetApp(){
   // Restore drawer buttons visibility
   var btns=document.querySelectorAll('.drawer-btn');
