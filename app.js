@@ -1050,9 +1050,10 @@ function handleSubmitFile(blob,filename,mimeType){
   var canShareText=!!navigator.share;
   showScreen('doneScreen');exitCompactWalk();
   var shareBtn=document.getElementById('btnShareFile');var dlBtn=document.getElementById('btnDownloadFile');var msg=document.getElementById('doneMsg');
-  if(canShareFiles){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Round Report';dlBtn.style.display='block';var simBtn2=document.getElementById('btnOpenSim');if(simBtn2)simBtn2.style.display=roundData.ticketUrl?'block':'none';msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';showToast('Rounds submitted!');}
+  if(canShareFiles){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Round Report';dlBtn.style.display='block';downloadBlob(blob,filename);var simBtn2=document.getElementById('btnOpenSim');if(simBtn2)simBtn2.style.display=roundData.ticketUrl?'block':'none';var photoCount=0;var pkeys=Object.keys(photoStore);for(var pi=0;pi<pkeys.length;pi++)photoCount+=photoStore[pkeys[pi]].length;
+msg.innerHTML='Your round data has been saved!'+(photoCount>0?'<br><strong>'+photoCount+' photo(s) included in download.</strong>':'')+'<br>Tap Share to send the report.';showToast('Rounds submitted!');}
   else if(canShareText){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Summary';dlBtn.style.display='block';downloadBlob(blob,filename);var simBtn=document.getElementById('btnOpenSim');if(simBtn)simBtn.style.display=roundData.ticketUrl?'block':'none';
-    msg.innerHTML='Your round data has been saved!<br>File downloaded. Tap Share to send a summary.';showToast('File downloaded!');}
+    msg.innerHTML='Your round data has been saved!<br>File downloaded'+(photoCount>0?' ('+photoCount+' photos included)':'')+''+(photoCount>0?' ('+photoCount+' photos included)':'')+'. Tap Share to send a summary.';showToast('File downloaded!');}
   else{shareBtn.style.display='none';dlBtn.style.display='block';downloadBlob(blob,filename);
 
     msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';showToast('File downloaded!');}
@@ -1129,10 +1130,15 @@ function fallbackCopy(text){
   document.body.removeChild(ta);
 }
 function downloadFileAgain(){
-  var excelHtml=generateExcel();
-  var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
-  downloadBlob(new Blob([excelHtml],{type:'application/vnd.ms-excel'}),baseName+'.xls');
-  showToast('File downloaded again');
+  if(lastSubmitBlob&&lastSubmitFilename){
+    downloadBlob(lastSubmitBlob,lastSubmitFilename);
+    showToast('File downloaded again');
+  }else{
+    var excelHtml=generateExcel();
+    var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
+    downloadBlob(new Blob([excelHtml],{type:'application/vnd.ms-excel'}),baseName+'.xls');
+    showToast('Report downloaded');
+  }
 }
 
 function downloadAgain(){if(lastSubmitBlob)downloadBlob(lastSubmitBlob,lastSubmitFilename);}
