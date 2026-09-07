@@ -1043,7 +1043,8 @@ function submitRounds(){
   roundData.endTime=Date.now();roundData.status='completed';roundData.lastModified=Date.now();
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
-  var hasPhotos=false;var keys=Object.keys(photoStore);for(var i=0;i<keys.length;i++){if(photoStore[keys[i]].length>0){hasPhotos=true;break;}}
+  var hasPhotos=false;var photoTotal=0;var keys=Object.keys(photoStore);for(var i=0;i<keys.length;i++){if(photoStore[keys[i]].length>0){hasPhotos=true;photoTotal+=photoStore[keys[i]].length;}}
+  showToast('Submit: '+photoTotal+' photos, JSZip='+(typeof JSZip!=='undefined'?'loaded':'MISSING'));
   if(hasPhotos&&typeof JSZip!=='undefined'){
     var zip=new JSZip();zip.file(baseName+'.xls',excelHtml);
     var folder=zip.folder('photos');
@@ -1053,7 +1054,7 @@ function submitRounds(){
       var itemName=(secObj&&secObj.cols[parseInt(parts[1])])?secObj.cols[parseInt(parts[1])].replace(/[^a-zA-Z0-9]/g,'_').substring(0,15):'item';
       var b64=dataUrl.split(',')[1];folder.file(secName+'_'+itemName+'_'+(pi+1)+'.jpg',b64,{base64:true});
     });});
-    zip.generateAsync({type:'blob'}).then(function(blob){handleSubmitFile(blob,baseName+'.zip','application/zip');});
+    zip.generateAsync({type:'blob'}).then(function(blob){showToast('ZIP created: '+Math.round(blob.size/1024)+'KB');handleSubmitFile(blob,baseName+'.zip','application/zip');});
   }else{var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});handleSubmitFile(blob,baseName+'.xls','application/vnd.ms-excel');}
   }catch(err){alert('Submit error: '+err.message);}
 }
