@@ -752,6 +752,57 @@ function resolveFromWalk(findingKey){
   loadFindingsFromFirebase();
   showToast('Finding resolved');
 }
+
+function showFindingModal(finding,sIdx,iIdx,status,mode){
+  var overlay=document.getElementById('findingModalOverlay');
+  var modal=document.getElementById('findingModal');
+  var html='';
+  // Title
+  html+='<div class="finding-modal-title">\u26A0 Open Finding Detected</div>';
+  // Finding details
+  html+='<div class="finding-modal-detail">';
+  html+='<div class="fm-item">'+escHtml(finding.item||'Unknown item')+'</div>';
+  if(finding.note)html+='<div class="fm-note">\"'+escHtml(finding.note)+'\"</div>';
+  html+='<div class="fm-meta">Reported by <strong>'+escHtml(finding.technician||'unknown')+'</strong> \u2014 '+escHtml(finding.date||'')+'</div>';
+  if(finding.lastConfirmedBy)html+='<div class="fm-meta">Last confirmed by <strong>'+escHtml(finding.lastConfirmedBy)+'</strong> \u2014 '+timeAgo(finding.lastConfirmed)+'</div>';
+  html+='</div>';
+  // Buttons based on mode
+  if(mode==='issue'){
+    html+='<div class="finding-modal-btns">';
+    html+='<button class="fm-btn-confirm" onclick="findingModalAction(\'confirm\','+sIdx+','+iIdx+',\''+status+'\',\''+escHtml(finding._key||'')+'\')">\u2705 Same Issue \u2014 Confirm Still Present</button>';
+    html+='<button class="fm-btn-new" onclick="findingModalAction(\'new\','+sIdx+','+iIdx+',\''+status+'\',\''+escHtml(finding._key||'')+'\')">\u26A0 New Issue \u2014 Report Different Problem</button>';
+    html+='<button class="fm-btn-cancel" onclick="closeFindingModal()">Cancel</button>';
+    html+='</div>';
+  }else{
+    html+='<div class="finding-modal-btns">';
+    html+='<button class="fm-btn-resolve" onclick="findingModalAction(\'resolve\','+sIdx+','+iIdx+',\''+status+'\',\''+escHtml(finding._key||'')+'\')">\u2705 Resolve Finding \u2014 Issue Fixed</button>';
+    html+='<button class="fm-btn-cancel" onclick="findingModalAction(\'keep\','+sIdx+','+iIdx+',\''+status+'\',\''+escHtml(finding._key||'')+'\')">Keep Finding Open \u2014 Mark Walk OK</button>';
+    html+='<button class="fm-btn-cancel" onclick="closeFindingModal()">Cancel</button>';
+    html+='</div>';
+  }
+  modal.innerHTML=html;
+  overlay.classList.add('active');
+}
+function closeFindingModal(){document.getElementById('findingModalOverlay').classList.remove('active');}
+function findingModalAction(action,sIdx,iIdx,status,findingKey){
+  closeFindingModal();
+  if(action==='confirm'){
+    confirmFinding(findingKey);
+    roundData.sections[sIdx].items[iIdx].status=status;
+    roundData.sections[sIdx].items[iIdx].noteLocked=false;
+  }else if(action==='new'){
+    roundData.sections[sIdx].items[iIdx].status=status;
+    roundData.sections[sIdx].items[iIdx].noteLocked=false;
+  }else if(action==='resolve'){
+    resolveFromWalk(findingKey);
+    roundData.sections[sIdx].items[iIdx].status=status;
+    roundData.sections[sIdx].items[iIdx].noteLocked=false;
+  }else if(action==='keep'){
+    roundData.sections[sIdx].items[iIdx].status=status;
+    roundData.sections[sIdx].items[iIdx].noteLocked=false;
+  }
+  checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();
+}
 /* ===== SWIPE ===== */
 function attachSwipe(card,sIdx,iIdx,type){
   if(!card)return;if(viewOnlyMode)return;var startX=0,startY=0,swiping=false,scrolling=false;
@@ -783,13 +834,10 @@ function markItem(sIdx,iIdx,status){
   var itemName=sec.cols?sec.cols[iIdx]:'';
   var existing=getOpenFinding(sec.name,itemName);
   if(existing&&(status==='issue'||status==='unexpected')){
-    // Item already has an open finding — confirm it instead of creating duplicate
-    var choice=confirm('This item already has an open finding from '+escHtml(existing.technician||'unknown')+' ('+escHtml(existing.date||'')+').\n\nTap OK to confirm it\'s still an issue, or Cancel to report a NEW issue.');
-    if(choice){confirmFinding(existing._key);roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();return;}
+    showFindingModal(existing,sIdx,iIdx,status,'issue');return;
   }
   if(existing&&(status==='ok'||status==='expected')){
-    // Item has an open finding but tech says OK — offer to resolve
-    if(confirm('This item has an open finding. Resolve it?')){resolveFromWalk(existing._key);}
+    showFindingModal(existing,sIdx,iIdx,status,'resolve');return;
   }
   roundData.sections[sIdx].items[iIdx].status=status;roundData.sections[sIdx].items[iIdx].noteLocked=false;checkSectionComplete(sIdx);renderWalkthrough();autoSaveRound();}
 

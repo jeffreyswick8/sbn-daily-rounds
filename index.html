@@ -396,6 +396,22 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 .compliance-bldg-label{font-size:14px;font-weight:700;color:var(--accent);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
 .compliance-bldg-count{font-size:12px;color:var(--muted);font-weight:600}
 .screen#loginScreen{height:100vh;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:var(--bg)}
+
+/* ===== FINDINGS AWARENESS MODAL ===== */
+.finding-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:250;padding:16px}
+.finding-modal-overlay.active{display:flex}
+.finding-modal{background:var(--surface);border-radius:var(--radius);max-width:400px;width:100%;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.finding-modal-title{font-size:16px;font-weight:700;color:var(--amber);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.finding-modal-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px}
+.finding-modal-detail .fm-item{font-weight:700;color:var(--text);margin-bottom:4px}
+.finding-modal-detail .fm-note{color:var(--muted);margin-bottom:4px;font-style:italic}
+.finding-modal-detail .fm-meta{color:var(--muted);font-size:11px}
+.finding-modal-btns{display:flex;flex-direction:column;gap:8px}
+.finding-modal-btns button{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;min-height:48px}
+.fm-btn-confirm{background:var(--amber);color:#000}
+.fm-btn-new{background:var(--red);color:#fff}
+.fm-btn-resolve{background:var(--green);color:#000}
+.fm-btn-cancel{background:var(--card);color:var(--muted);border:1px solid var(--border) !important}
 </style>
 </head>
 <body>
@@ -569,6 +585,11 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 
 </div>
 <script src="app.js" defer></script>
+
+<!-- FINDINGS AWARENESS MODAL -->
+<div class="finding-modal-overlay" id="findingModalOverlay">
+<div class="finding-modal" id="findingModal"></div>
+</div>
 </body>
 </html>
 <!-- v3.9 --><!-- LOGIN SCREEN -->
