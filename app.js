@@ -1050,14 +1050,22 @@ function handleSubmitFile(blob,filename,mimeType){
   var canShareText=!!navigator.share;
   showScreen('doneScreen');exitCompactWalk();
   var shareBtn=document.getElementById('btnShareFile');var dlBtn=document.getElementById('btnDownloadFile');var msg=document.getElementById('doneMsg');
-  if(canShareFiles){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Round Report';dlBtn.style.display='block';msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';showToast('Rounds submitted!');}
-  else if(canShareText){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Summary';dlBtn.style.display='block';downloadBlob(blob,filename);msg.innerHTML='Your round data has been saved!<br>File downloaded. Tap Share to send a summary.';showToast('File downloaded!');}
+  if(canShareFiles){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Round Report';dlBtn.style.display='block';var simBtn2=document.getElementById('btnOpenSim');if(simBtn2)simBtn2.style.display=roundData.ticketUrl?'block':'none';msg.innerHTML='Your round data has been saved!<br>Tap Share to send the report.';showToast('Rounds submitted!');}
+  else if(canShareText){shareBtn.style.display='block';shareBtn.textContent='\uD83D\uDCE4 Share Summary';dlBtn.style.display='block';downloadBlob(blob,filename);var simBtn=document.getElementById('btnOpenSim');if(simBtn)simBtn.style.display=roundData.ticketUrl?'block':'none';
+    msg.innerHTML='Your round data has been saved!<br>File downloaded. Tap Share to send a summary.';showToast('File downloaded!');}
   else{shareBtn.style.display='none';dlBtn.style.display='block';downloadBlob(blob,filename);
-    var ticketUrl=roundData.ticketUrl;if(ticketUrl){if(!/^https?:\/\//.test(ticketUrl)){ticketUrl=ticketUrl.replace(/^tt\//,'');ticketUrl='https://t.corp.amazon.com/'+ticketUrl;}window.open(ticketUrl,'_blank');}
+
     msg.innerHTML='Your round data has been saved!<br>File downloaded — attach to your SIM ticket.';showToast('File downloaded!');}
 }
 
 /* ===== EXCEL EXPORT ===== */
+
+function openSimFromDone(){
+  if(!roundData||!roundData.ticketUrl)return;
+  var url=roundData.ticketUrl;
+  if(!/^https?:\/\//.test(url)){url=url.replace(/^tt\//,'');url='https://t.corp.amazon.com/'+url;}
+  window.open(url,'_blank');
+}
 function shareFile(){
   var btn=document.getElementById('btnShareFile');
   if(!roundData||!lastReportKey){if(btn)btn.textContent='No report available';return;}
