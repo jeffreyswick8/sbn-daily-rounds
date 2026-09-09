@@ -1301,7 +1301,7 @@ function loadRecentRounds(filterBuilding){
   tryClipboardAutoFill();
   if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
   if(!filterBuilding){
-    var isSA=loggedInAlias&&isSuperAdmin(loggedInAlias);
+    var isSA=loggedInAlias&&getUserRole(loggedInAlias)==='superAdmin';
     document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Select a building to see recent walks</div>'+(isSA?'<div style="text-align:center;padding:0 16px 16px"><button onclick="loadRecentRounds(\'ALL\')" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;font-size:13px;cursor:pointer">\uD83D\uDCCB Show All Buildings</button></div>':'');
     return;
   }
@@ -1392,7 +1392,7 @@ async function deleteRound(fbKey){
   var delOk=await appConfirm('Confirm Deletion','Delete this round? This action cannot be undone.',{danger:true});if(!delOk)return;
   // Log the deletion
   if(db){db.ref(fbKey).once('value',function(snap){var data=snap.val();if(data){if(!data.editLog)data.editLog=[];data.editLog.push({alias:delAlias,timestamp:Date.now(),action:'deleted round'});db.ref('audit/deletions/'+Date.now()).set({fbKey:fbKey,deletedBy:delAlias,timestamp:Date.now(),building:data.building||'',date:data.date||'',technician:data.technician||''});}});}
-  deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
+  deleteFromFirebase(fbKey);showToast('Round deleted');var delBldg=fbKey.split('/')[1];setTimeout(function(){loadRecentRounds(delBldg);},500);}
 async function archiveRound(fbKey){
   if(!db||!fbKey)return;
   var archOk=await appConfirm('Archive Round','Archive this round? It will be removed from the home screen but saved for later.');if(!archOk)return;
@@ -1404,7 +1404,7 @@ async function archiveRound(fbKey){
     // Remove from active rounds
     deleteFromFirebase(fbKey);
     showToast('Round archived');
-    setTimeout(loadRecentRounds,500);
+    var archBldg=fbKey.split('/')[1];setTimeout(function(){loadRecentRounds(archBldg);},500);
   });
 }
 var showingArchived=false;
