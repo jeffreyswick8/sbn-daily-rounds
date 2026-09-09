@@ -1,11 +1,48 @@
 
+
+/* ===== CUSTOM MODAL SYSTEM ===== */
+var _modalResolve=null;
+function showAppModal(opts){
+  return new Promise(function(resolve){
+    _modalResolve=resolve;
+    var overlay=document.getElementById('appModalOverlay');
+    var title=document.getElementById('appModalTitle');
+    var body=document.getElementById('appModalBody');
+    var btns=document.getElementById('appModalBtns');
+    title.textContent=opts.title||'';
+    title.style.color=opts.danger?'var(--red)':'var(--accent)';
+    var bodyHtml=opts.message?'<div>'+opts.message+'</div>':'';
+    if(opts.input){bodyHtml+='<input type="'+(opts.inputType||'text')+'" id="appModalInput" placeholder="'+(opts.placeholder||'')+'" autocomplete="off" autocapitalize="none">';}
+    body.innerHTML=bodyHtml;
+    var btnHtml='';
+    if(opts.cancel!==false){btnHtml+='<button class="app-modal-btn app-modal-btn-cancel" onclick="closeAppModal(null)">'+( opts.cancelText||'Cancel')+'</button>';}
+    btnHtml+='<button class="app-modal-btn '+(opts.danger?'app-modal-btn-danger':'app-modal-btn-primary')+'" id="appModalConfirmBtn" onclick="confirmAppModal()">'+( opts.confirmText||'OK')+'</button>';
+    btns.innerHTML=btnHtml;
+    overlay.classList.add('active');
+    if(opts.input){var inp=document.getElementById('appModalInput');setTimeout(function(){inp.focus();},100);
+      inp.addEventListener('keydown',function(e){if(e.key==='Enter')confirmAppModal();});}
+  });
+}
+function confirmAppModal(){
+  var inp=document.getElementById('appModalInput');
+  var val=inp?inp.value:'__confirmed__';
+  document.getElementById('appModalOverlay').classList.remove('active');
+  if(_modalResolve)_modalResolve(val);_modalResolve=null;
+}
+function closeAppModal(val){
+  document.getElementById('appModalOverlay').classList.remove('active');
+  if(_modalResolve)_modalResolve(val);_modalResolve=null;
+}
+function appAlert(title,message){return showAppModal({title:title,message:message,cancel:false,confirmText:'OK'});}
+function appConfirm(title,message,opts){return showAppModal({title:title,message:message,confirmText:(opts&&opts.confirmText)||'Confirm',cancelText:(opts&&opts.cancelText)||'Cancel',danger:opts&&opts.danger});}
+function appPrompt(title,message,placeholder){return showAppModal({title:title,message:message,input:true,placeholder:placeholder||'',confirmText:'Submit',cancelText:'Cancel'});}
 window.onerror=function(msg,url,line,col,err){var d=document.createElement('div');d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;font-size:13px;z-index:9999;font-family:monospace';d.textContent='JS Error: '+msg+' (line '+line+')';document.body.appendChild(d);setTimeout(function(){d.remove();},10000);};
 /* ===== DEFAULT SECTIONS DATA ===== */
 var defaultSections = [
   {name:'Office Area',desc:'Check all sub-zones: Bullpen, MDF Room, MMR (if applicable), Breakroom, Conference Rooms, Electrical Closet, Corridors, ACS/MaxCool panels, Fire Alarm Panel. Verify systems are free of unexpected alarms, doors are secured, and EPMS is operational.',cols:['Electrical Closet','ACS','MDF Room','EPMS','MMR (if appl.)','Load on Catcher 1','Load on Catcher 2','Conference Rooms','Breakroom','Office AC Panel','Corridors','MaxCool Panel','Office Area','Fire Alarm Panel','Dock Area'],type:'ok_issue',cheatSheet:'ACS panels: No alarms, setpoints normal | MaxCool: No alarms | EPMS: Online, no comm faults | Fire Alarm Panel: No active alarms, system normal | MDF Room: 60-85°F, <80% RH'},
 {name:'Medium Voltage Switchgear A and B',desc:'All items checked via EPMS. Check that all breakers are in normal alignment, FLoReS is in AUTO, relay status is good, and free of alarms. Check Controls UPS Voltage (110 Vdc - 140 Vdc). Verify no audible or visual alarms present.',cols:['Breaker Status','FLoReS','UPS','Audible/Visual'],type:'ok_issue',cheatSheet:'NOTE: All items to be checked via EPMS | System voltage: 34.5 kV (live ~34,746 V) | All breakers: Normal alignment | FLoReS: AUTO | Controls UPS: 110-140 Vdc | Relay status: Good, no trip flags | No audible or visual alarms'
 },
-  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check fuel, oil, and coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, no leaks or debris. See Reference Values for specific ranges.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1C','XMFR 1.1C','GEN 1.1B','XMFR 1.1B','GEN 1.1A','XMFR 1.1A','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp',cheatSheet:'RPM: 1800 | Battery: 24 Vdc (24-28 Vdc with charger) | Oil pressure: 30-80 PSI (running) | Coolant temp: >100°F standby (block heater), 160-200°F running | Fuel level: >80% | E-Stop: NOT pressed | XFMR liquid: 65-75°C | XFMR pressure: -2 to 6 PSI'},
+  {name:'Generator Yard DH1',desc:'Gen in auto, no unexpected alarms. Check fuel, oil, and coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, no leaks or debris. See Reference Values for specific ranges.',cols:['HSSB GEN','HSSB XFMR','GEN 1.1C','XMFR 1.1C','GEN 1.1B','XMFR 1.1B','GEN 1.1A','XMFR 1.1A','GEN 1.2A','XMFR 1.2A','GEN 1.2B','XMFR 1.2B','GEN 1.3A','XFMR 1.3A','GEN 1.3B','XFMR 1.3B','GEN 1.4A','XFMR 1.4A','GEN 1.4B','XFMR 1.4B','GEN 1.5A','XFMR 1.5A','GEN 1.5B','XFMR 1.5B','GEN 1.6A','XFMR 1.6A','GEN 1.6B','XFMR 1.6B'],type:'exp_unexp',cheatSheet:'RPM: 1800 (when running) | Battery: 24 Vdc (24-28 Vdc with charger) | Oil pressure: 30-80 PSI (running) | Coolant temp: >100°F standby (block heater), 160-200°F running | Fuel level: >80% | E-Stop: NOT pressed | XFMR liquid: 65-75°C | XFMR pressure: -2 to 6 PSI'},
   {name:'Diesel Fuel System',desc:'Check for leaks in fuel piping, tank, and pumps. Ensure pumps are in auto and free of alarms. Verify fuel level is above 80%. Inspect piping connections, valves, and containment area for signs of leakage or debris.',cols:['Piping','Tank','Pumps','Audible/Visual'],type:'exp_unexp',cheatSheet:'Belly tank: 24-hour storage per generator | Tank levels: Low Low (EPMS alarm), Low (FCP alarm + opens inlet), High (FCP alarm + closes inlet + sounder), High High (EPMS alarm + sounder) | Pump pressure: 2.5 bar (set during commissioning) | Fuel polisher: 24/7, DP alarm at 2.3 bar | Pump rotation: Duty/Standby auto-rotate weekly (Mon 2pm) | No flow detected: auto-switch to standby pump | Leak detection: Underground double-contained pipework, 2 systems | Bund sump: Hydrocarbon switch inhibits pumps if oil detected'},
   {name:'Electrical Room 1.1-1.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS/HUPS, DLB, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['HSSB','Lineup 1.1C','Lineup 1.1A','Lineup 1.1B','Lineup 1.2A','Lineup 1.2B','Lineup 1.3A','Lineup 1.3B','Lineup 1.4A','Lineup 1.4B','Lineup 1.5A','Lineup 1.5B','Lineup 1.6A','Lineup 1.6B'],type:'ok_issue',cheatSheet:'Room temp: 60-85°F normal (EPMS: 66-72°F), max 104°F failure (BOD) | Cooling: DX split systems, locally controlled | Ventilation: ERV, positive pressure | Humidity: <80% warning, >85% alarm | BMS: Monitoring and alarming (no direct control) | CRAC failure: switches to alternate temp sensor | ERV failure: alarm generated | All USBs: Normal alignment | ATS: AUTO | COPs: Closed | CUPS/HUPS: Online, battery OK (68-77°F) | VESDA: No alarm'},
   {name:'DAHU Gallery 1 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['1.1-001','1.1-003','1.1-005','1.1-007','1.1-009','1.2-001','1.2-003','1.2-005','1.2-007','1.3-001','1.3-003','1.3-005','1.3-007','1.4-001','1.4-003','1.4-005','1.4-007','1.5-001','1.5-003','1.5-005','1.5-007','1.6-001','1.6-003','1.6-005','1.6-007','VFD 1.1','VFD 1.2','VFD 1.3','VFD 1.4','VFD 1.5','VFD 1.6'],type:'ok_issue',cheatSheet:'SAT setpoint: 60-92°F (per SOO wet bulb reset table) | Free cooling: OATdb ≤82°F | Evap cooling: OATdb ≥87°F | FEC trigger: OATdb ≥70°F + SAT ≥92°F | MaxCool S1: ≥97°F trip, 94°F reset | MaxCool S2: Manual purge, 100% OA | Cold aisle WARNING >92°F, ALARM >95°F | Hot aisle max: 130°F | Server throttle: 104-113°F | Humidity: <80% RH | All DAHUs: AUTO | VFDs: AUTO | DP setpoint: 0.01 IWC | Dryout cycle: 5 min | Evap min stay: 30 min'},
@@ -16,7 +53,7 @@ var defaultSections = [
   {name:'DAHU Gallery 2 (Evens)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-002','2.1-004','2.1-006','2.1-008','2.1-010','2.2-002','2.2-004','2.2-006','2.2-008','2.3-002','2.3-004','2.3-006','2.3-008','2.4-002','2.4-004','2.4-006','2.4-008','2.5-002','2.5-004','2.5-006','2.5-008','2.6-002','2.6-004','2.6-006','2.6-008','VFD 2.1','VFD 2.2','VFD 2.3','VFD 2.4','VFD 2.5','VFD 2.6'],type:'ok_issue',cheatSheet:'SAT setpoint: 60-92°F (per SOO wet bulb reset table) | Free cooling: OATdb ≤82°F | Evap cooling: OATdb ≥87°F | FEC trigger: OATdb ≥70°F + SAT ≥92°F | MaxCool S1: ≥97°F trip, 94°F reset | MaxCool S2: Manual purge, 100% OA | Cold aisle WARNING >92°F, ALARM >95°F | Hot aisle max: 130°F | Server throttle: 104-113°F | Humidity: <80% RH | All DAHUs: AUTO | VFDs: AUTO | DP setpoint: 0.01 IWC | Dryout cycle: 5 min | Evap min stay: 30 min'},
   {name:'DAHU Gallery 2 (Odds)',desc:'All DAHUs in auto, no unexpected alarms, not leaking water. All VFDs in auto. VESDA not in alarm.',cols:['2.1-001','2.1-003','2.1-005','2.1-007','2.1-009','2.2-001','2.2-003','2.2-005','2.2-007','2.3-001','2.3-003','2.3-005','2.3-007','2.4-001','2.4-003','2.4-005','2.4-007','2.5-001','2.5-003','2.5-005','2.5-007','2.6-001','2.6-003','2.6-005','2.6-007','VFD 2.1','VFD 2.2','VFD 2.3','VFD 2.4','VFD 2.5','VFD 2.6'],type:'ok_issue',cheatSheet:'SAT setpoint: 60-92°F (per SOO wet bulb reset table) | Free cooling: OATdb ≤82°F | Evap cooling: OATdb ≥87°F | FEC trigger: OATdb ≥70°F + SAT ≥92°F | MaxCool S1: ≥97°F trip, 94°F reset | MaxCool S2: Manual purge, 100% OA | Cold aisle WARNING >92°F, ALARM >95°F | Hot aisle max: 130°F | Server throttle: 104-113°F | Humidity: <80% RH | All DAHUs: AUTO | VFDs: AUTO | DP setpoint: 0.01 IWC | Dryout cycle: 5 min | Evap min stay: 30 min'},
   {name:'Electrical Room 2.1-2.6',desc:'Check equipment in normal alignment, in AUTO, free of unexpected alarms. Standard ERs have 4 lineups: USB A, COP A, USB B, COP B. Check every USB, ATS, COP, CUPS, AMCOP, BACOP, VESDA, ACS/MaxCool panel. Verify no audible or visual alarms.',cols:['Lineup 2.1C','Lineup 2.1A','Lineup 2.1B','Lineup 2.2A','Lineup 2.2B','Lineup 2.3A','Lineup 2.3B','Lineup 2.4A','Lineup 2.4B','Lineup 2.5A','Lineup 2.5B','Lineup 2.6A','Lineup 2.6B'],type:'ok_issue',cheatSheet:'Room temp: 60-85°F normal (EPMS: 66-72°F), max 104°F failure (BOD) | Cooling: DX split systems, locally controlled | Ventilation: ERV, positive pressure | Humidity: <80% warning, >85% alarm | BMS: Monitoring and alarming (no direct control) | CRAC failure: switches to alternate temp sensor | ERV failure: alarm generated | All USBs: Normal alignment | ATS: AUTO | COPs: Closed | CUPS/HUPS: Online, battery OK (68-77°F) | VESDA: No alarm'},
-  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check fuel, oil, and coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, no leaks or debris. See Reference Values for specific ranges.',cols:['GEN 2.1C','XMFR 2.1C','GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.4B','XFMR 2.4B','GEN 2.4A','XFMR 2.4A','GEN 2.3B','XFMR 2.3B','GEN 2.3A','XFMR 2.3A','GEN 2.2B','XMFR 2.2B','GEN 2.2A','XMFR 2.2A','GEN 2.1B','XMFR 2.1B','GEN 2.1A','XMFR 2.1A'],type:'exp_unexp',cheatSheet:'RPM: 1800 | Battery: 24 Vdc (24-28 Vdc with charger) | Oil pressure: 30-80 PSI (running) | Coolant temp: >100°F standby (block heater), 160-200°F running | Fuel level: >80% | E-Stop: NOT pressed | XFMR liquid: 65-75°C | XFMR pressure: -2 to 6 PSI'},
+  {name:'Generator Yard DH2',desc:'Gen in auto, no unexpected alarms. Check fuel, oil, and coolant levels. Verify battery charger and block heater. Check breaker status. Verify E-Stop is NOT pressed, no leaks or debris. See Reference Values for specific ranges.',cols:['GEN 2.1C','XMFR 2.1C','GEN 2.6B','XFMR 2.6B','GEN 2.6A','XFMR 2.6A','GEN 2.5B','XFMR 2.5B','GEN 2.5A','XFMR 2.5A','GEN 2.4B','XFMR 2.4B','GEN 2.4A','XFMR 2.4A','GEN 2.3B','XFMR 2.3B','GEN 2.3A','XFMR 2.3A','GEN 2.2B','XMFR 2.2B','GEN 2.2A','XMFR 2.2A','GEN 2.1B','XMFR 2.1B','GEN 2.1A','XMFR 2.1A'],type:'exp_unexp',cheatSheet:'RPM: 1800 (when running) | Battery: 24 Vdc (24-28 Vdc with charger) | Oil pressure: 30-80 PSI (running) | Coolant temp: >100°F standby (block heater), 160-200°F running | Fuel level: >80% | E-Stop: NOT pressed | XFMR liquid: 65-75°C | XFMR pressure: -2 to 6 PSI'},
   {name:'Data Hall',desc:'Walk both data halls checking PDCs, racks, and hot aisle containment. Verify VESDA and MaxCool panels. See Reference Values for specific thresholds.',cols:['1.1 PDCs','1.1 Racks','1.1 HAC','1.2 PDCs','1.2 Racks','1.2 HAC','1.3 PDCs','1.3 Racks','1.3 HAC','1.4 PDCs','1.4 Racks','1.4 HAC','1.5 PDCs','1.5 Racks','1.5 HAC','1.6 PDCs','1.6 Racks','1.6 HAC','2.1 PDCs','2.1 Racks','2.1 HAC','2.2 PDCs','2.2 Racks','2.2 HAC','2.3 PDCs','2.3 Racks','2.3 HAC','2.4 PDCs','2.4 Racks','2.4 HAC','2.5 PDCs','2.5 Racks','2.5 HAC','2.6 PDCs','2.6 Racks','2.6 HAC'],type:'ok_issue',cheatSheet:'Cold aisle nominal: 85°F (SOO SAT reset: 60-92°F per wet bulb) | MaxCool S1: ≥97°F trip, 94°F reset (Run Warmer, 0-3000ft) | MaxCool S2: Manual purge, bypasses onboard controller | Cold aisle WARNING >92°F | Cold aisle ALARM >95°F | Server throttle: 104-113°F, shutdown >113°F | Hot aisle max: 130°F | Humidity: <80% RH | PDC: Both sources available | Catcher load: <4A | VESDA: No alarm | Escalation: 80-85°F supervisor, 85-90°F FM/CE, 90-95°F CM, 95°F+ Stage 2, 104°F+ corporate'}
 ];
 var activeSections=defaultSections;
@@ -145,7 +182,7 @@ function checkSession(){if(checkSessionExpiry())return false;
   return false;
 }
 
-function logout(){if(!confirm('Log out of SBN Daily Rounds?'))return;
+async function logout(){var ok=await appConfirm('Log Out','Log out of SBN Daily Rounds?');if(!ok)return;
   sessionStorage.removeItem('sbn-rounds-alias');
   loggedInAlias='';
   showScreen('loginScreen');
@@ -262,9 +299,9 @@ function addAdmin(){
   renderAdminPanel();
 }
 
-function removeAdmin(idx){
+async function removeAdmin(idx){
   var alias=roles.admins[idx];
-  if(!confirm('Remove '+alias+' from Admin access?'))return;
+  var rok=await appConfirm('Remove Admin','Remove '+alias+' from Admin access?',{danger:true});if(!rok)return;
   roles.admins.splice(idx,1);
   if(db)db.ref('config/roles/admins').set(roles.admins);
   showToast(alias+' removed from Admin');
@@ -373,9 +410,9 @@ function getSelectedBuilding(){var s=document.querySelector('.building-btn.selec
 function getSelectedShift(){var s=document.querySelector('.shift-btn.selected');return s?s.getAttribute('data-shift'):'';}
 function checkReady(){var ok=getSelectedBuilding()&&getSelectedShift();var btn=document.getElementById('btnBegin');btn.style.opacity=ok?'1':'0.5';}
 
-function beginRounds(){
+async function beginRounds(){
   try{
-  if(roundData&&roundData.status==='in_progress'){if(!confirm('You have a round in progress for '+roundData.building+'. Start a new one? (Current round will be saved as in-progress)'))return;}
+  if(roundData&&roundData.status==='in_progress'){var brok=await appConfirm('Round In Progress','You have a round in progress for '+roundData.building+'. Start a new one? (Current round will be saved as in-progress)');if(!brok)return;}
   var btn=document.getElementById('btnBegin');
   var selectedBldg=getSelectedBuilding();
   if(!selectedBldg){btn.textContent='\u26A0 SELECT A BUILDING';btn.style.background='var(--red)';setTimeout(function(){btn.textContent='BEGIN ROUNDS';btn.style.background='';},2000);return;}
@@ -415,7 +452,7 @@ function startRoundsWithSections(selectedBldg){
   document.getElementById('headerSub').textContent=activeBuilding+' — '+roundData.shift+' — '+roundData.technician;if(isMVNR(activeBuilding)){document.getElementById('headerSub').textContent+=' [MVNR]';}
   hideLoading();restorePhotosFromStorage();showScreen('mainScreen');loadZoneStatuses();loadFindingsFromFirebase();loadHistoryFromFirebase();loadHandoffNotes();updateSimBanner();
   switchMainTab('zones');
-  }catch(e){alert('startRounds error: '+e.message);showScreen('startScreen');}
+  }catch(e){appAlert('Error','startRounds error: '+e.message);showScreen('startScreen');}
 }
 
 /* ===== SIM TICKET ===== */
@@ -858,7 +895,6 @@ function attachSwipe(card,sIdx,iIdx,type){
     card.querySelector('.swipe-bg-ok').style.display='none';
     card.querySelector('.swipe-bg-issue').style.display='none';
   });
-  card.addEventListener('click',function(e){if(!('ontouchstart' in window))return;if(swiping)return;if(e.target.closest('.issue-detail')||e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;var item=roundData.sections[sIdx].items[iIdx];var okSt=type==='exp_unexp'?'expected':'ok';var issueSt=type==='exp_unexp'?'unexpected':'issue';if(!item.status){item.status=okSt;}else if(item.status===okSt){item.status=issueSt;}else{item.status='';item.note='';item.noteLocked=false;}checkSectionComplete(sIdx);renderWalkthrough();});
 }
 
 function markItem(sIdx,iIdx,status){
@@ -912,11 +948,11 @@ function deleteSectionNote(sIdx,nIdx){
   secData.notes=secData.notesList?secData.notesList.join('\n---\n'):'';
   renderWalkthrough();
 }
-function markRemainingOk(){
+async function markRemainingOk(){
   var sec=activeSections[currentSection];var secData=roundData.sections[currentSection];
   var remaining=0;for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)remaining++;}
   if(remaining===0)return;
-  if(!confirm('Mark '+remaining+' remaining item'+(remaining>1?'s':'')+' as OK/Expected?'))return;
+  var mrok=await appConfirm('Remaining OK','Mark '+remaining+' remaining item'+(remaining>1?'s':'')+' as OK/Expected?');if(!mrok)return;
   var okStatus=sec.type==='exp_unexp'?'expected':'ok';
   for(var i=0;i<secData.items.length;i++){if(!secData.items[i].status)secData.items[i].status=okStatus;}
   checkSectionComplete(currentSection);
@@ -1045,7 +1081,7 @@ function showSummary(){
 /* ===== SUBMIT ===== */
 function submitRounds(){
   try{
-  for(var di=0;di<roundData.sections.length;di++){var ds=roundData.sections[di];if(!ds){alert('ERROR: Section '+di+' undefined');return;}}
+  for(var di=0;di<roundData.sections.length;di++){var ds=roundData.sections[di];if(!ds){appAlert('Error','Section '+di+' undefined');return;}}
   roundData.endTime=Date.now();roundData.status='completed';roundData.lastModified=Date.now();
   var excelHtml=generateExcel();
   var baseName=roundData.building+'_Rounds_'+roundData.date+'_'+roundData.technician.replace(/[^a-zA-Z0-9]/g,'');
@@ -1063,7 +1099,7 @@ function submitRounds(){
     });});
     zip.generateAsync({type:'blob'}).then(function(blob){handleSubmitFile(blob,baseName+'.zip','application/zip');});
   }else{var blob=new Blob([excelHtml],{type:'application/vnd.ms-excel'});handleSubmitFile(blob,baseName+'.xls','application/vnd.ms-excel');}
-  }catch(err){alert('Submit error: '+err.message);}
+  }catch(err){appAlert('Error','Submit error: '+err.message);}
 }
 function downloadBlob(blob,fn){var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 function handleSubmitFile(blob,filename,mimeType){
@@ -1265,7 +1301,7 @@ function loadRecentRounds(filterBuilding){
   tryClipboardAutoFill();
   if(!db){document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Offline</div>';return;}
   if(!filterBuilding){
-    var isSA=loggedInAlias&&loggedInAlias===superAdmin;
+    var isSA=loggedInAlias&&isSuperAdmin(loggedInAlias);
     document.getElementById('recentList').innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">Select a building to see recent walks</div>'+(isSA?'<div style="text-align:center;padding:0 16px 16px"><button onclick="loadRecentRounds(\'ALL\')" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;font-size:13px;cursor:pointer">\uD83D\uDCCB Show All Buildings</button></div>':'');
     return;
   }
@@ -1311,10 +1347,10 @@ function renderRecentRounds(rounds){
   }
   document.getElementById('recentList').innerHTML=html;
 }
-function editRound(fbKey){
+async function editRound(fbKey){
   if(!db){showToast('Cannot edit offline');return;}
   // Prompt for alias before editing
-  var editAlias=prompt('Enter your alias to edit this round:');
+  var editAlias=await appPrompt('Edit Round','Enter your alias to edit this round:','alias');
   if(!editAlias||!editAlias.trim()){showToast('Alias required to edit');return;}
   editAlias=editAlias.trim();
 
@@ -1348,18 +1384,18 @@ function editRound(fbKey){
     }catch(e){showToast('Error opening round: '+e.message);}
   });
 }
-function deleteRound(fbKey){
-  var delAlias=prompt('Enter your alias to confirm deletion:');
+async function deleteRound(fbKey){
+  var delAlias=await appPrompt('Delete Round','Enter your alias to confirm deletion:','alias');
   if(!delAlias||!delAlias.trim()){showToast('Alias required to delete');return;}
   delAlias=delAlias.trim();
   if(!canDelete(delAlias)){showToast('Admin access required to delete rounds. Contact your CE or FM.');return;}
-  if(!confirm('Delete this round? This action cannot be undone.'))return;
+  var delOk=await appConfirm('Confirm Deletion','Delete this round? This action cannot be undone.',{danger:true});if(!delOk)return;
   // Log the deletion
   if(db){db.ref(fbKey).once('value',function(snap){var data=snap.val();if(data){if(!data.editLog)data.editLog=[];data.editLog.push({alias:delAlias,timestamp:Date.now(),action:'deleted round'});db.ref('audit/deletions/'+Date.now()).set({fbKey:fbKey,deletedBy:delAlias,timestamp:Date.now(),building:data.building||'',date:data.date||'',technician:data.technician||''});}});}
   deleteFromFirebase(fbKey);showToast('Round deleted');setTimeout(loadRecentRounds,500);}
-function archiveRound(fbKey){
+async function archiveRound(fbKey){
   if(!db||!fbKey)return;
-  if(!confirm('Archive this round? It will be removed from the home screen but saved for later.'))return;
+  var archOk=await appConfirm('Archive Round','Archive this round? It will be removed from the home screen but saved for later.');if(!archOk)return;
   db.ref(fbKey).once('value',function(snap){
     var data=snap.val();if(!data){showToast('Round not found');return;}
     // Save to archived path
@@ -1554,8 +1590,8 @@ function saveHandoff(){
   saveToFirebase(data,'handoff/'+activeBuilding+'/history/'+Date.now());
   handoffData=data;handoffEditing=false;renderHandoff();showToast('Handoff note saved!');
 }
-function clearHandoff(){
-  if(!confirm('Clear this handoff note?'))return;
+async function clearHandoff(){
+  var hOk=await appConfirm('Clear Handoff','Clear this handoff note?');if(!hOk)return;
   if(db&&activeBuilding){if(handoffData)saveToFirebase(handoffData,'handoff/'+activeBuilding+'/history/'+Date.now());db.ref('handoff/'+activeBuilding+'/current').remove();}
   handoffData=null;renderHandoff();showToast('Handoff note cleared');
 }

@@ -412,6 +412,19 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 .fm-btn-new{background:var(--red);color:#fff}
 .fm-btn-resolve{background:var(--green);color:#000}
 .fm-btn-cancel{background:var(--card);color:var(--muted);border:1px solid var(--border) !important}
+
+.app-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:300;padding:16px}
+.app-modal-overlay.active{display:flex}
+.app-modal{background:var(--surface);border-radius:var(--radius);max-width:400px;width:100%;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.4);border:1px solid var(--border)}
+.app-modal-title{font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.app-modal-body{font-size:14px;color:var(--text);line-height:1.5;margin-bottom:20px}
+.app-modal-body input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:14px;margin-top:8px;outline:none;box-sizing:border-box}
+.app-modal-body input:focus{border-color:var(--accent)}
+.app-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.app-modal-btn{padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;min-height:44px}
+.app-modal-btn-primary{background:var(--accent);color:#fff}
+.app-modal-btn-danger{background:var(--red);color:#fff}
+.app-modal-btn-cancel{background:var(--card);color:var(--muted);border:1px solid var(--border)}
 </style>
 </head>
 <body>
@@ -589,6 +602,13 @@ body.light-mode .item-zone-er .item-content{background:rgba(253,224,71,0.12)}
 <script src="app.js" defer></script>
 
 <!-- FINDINGS AWARENESS MODAL -->
+<!-- CUSTOM MODAL SYSTEM -->
+<div class="app-modal-overlay" id="appModalOverlay">
+<div class="app-modal" id="appModal">
+<div class="app-modal-title" id="appModalTitle"></div>
+<div class="app-modal-body" id="appModalBody"></div>
+<div class="app-modal-btns" id="appModalBtns"></div>
+</div></div>
 <div class="finding-modal-overlay" id="findingModalOverlay">
 <div class="finding-modal" id="findingModal"></div>
 </div>
